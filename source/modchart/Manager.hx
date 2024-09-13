@@ -124,14 +124,6 @@ class Manager extends FlxBasic
             });
         }
     }
-	public static final UV_DATA:Array<Float> = [
-        0, 0,
-        1, 0,
-        0, 0.5,
-        1, 0.5,
-        0, 1,
-        1, 1
-    ];
     // Every 3 indices is a triangle
     public static final INDICES:Array<Int> = [
 		0, 1, 2,
@@ -139,10 +131,9 @@ class Manager extends FlxBasic
 		2, 3, 4,
 		3, 5, 4
     ];
-	var _uvtData = new DrawData<Float>(UV_DATA.length, true, UV_DATA);
 	var _indices = new DrawData<Int>(INDICES.length, true, INDICES);
+	var _uvtData = null;
 	var _vertices = null;
-	var _colors = new DrawData<Int>();
 
 	override function draw()
 	{
@@ -159,116 +150,28 @@ class Manager extends FlxBasic
 				if (!arrow.isSustainNote)
 					arrow.drawComplex(game.camHUD);
 				else {
-					if (arrow.sustainCache == null)
-					{
-						arrow.sustainCache = new FlxSprite();
-					}
-
-					// SUSTAIN POSITIONS PREDICTIONS SECTION
-
-					var thisPos = new Vector3D();
-					var nextPos = new Vector3D();
-					thisPos.setTo(getReceptorX(arrow.strumID, arrow.strumLine.ID) + ARROW_SIZEDIV2, getReceptorY(arrow.strumID, arrow.strumLine.ID) + ARROW_SIZEDIV2, 0);
-					nextPos.setTo(getReceptorX(arrow.strumID, arrow.strumLine.ID) + ARROW_SIZEDIV2, getReceptorY(arrow.strumID, arrow.strumLine.ID) + ARROW_SIZEDIV2, 0);
-					var shit1 = getScrollPos((arrow.strumTime - Conductor.songPosition) * (0.45 * CoolUtil.quantize(arrow.strumLine.members[arrow.strumID].getScrollSpeed(arrow), 100)), arrow);
-					var shit2 = getScrollPos(((arrow.strumTime + Conductor.stepCrochet) - Conductor.songPosition) * (0.45 * CoolUtil.quantize(arrow.strumLine.members[arrow.strumID].getScrollSpeed(arrow), 100)), arrow);
-					thisPos.x += shit1.x;
-					thisPos.y += shit1.y;
-					thisPos.z += shit1.z;
-					nextPos.x += shit2.x;
-					nextPos.y += shit2.y;
-					nextPos.z += shit2.z;
-					
-					renderMods(thisPos, {
-						hDiff: arrow.strumTime - Conductor.songPosition,
-						receptor: arrow.strumID,
-						field: arrow.strumLine.ID
-					});
-
-					renderMods(nextPos, {
-						hDiff: (arrow.strumTime + Conductor.stepCrochet) - Conductor.songPosition,
-						receptor: arrow.strumID,
-						field: arrow.strumLine.ID
-					});
+					var thisPos = new Vector3D(getReceptorX(arrow.strumID, arrow.strumLine.ID) + ARROW_SIZEDIV2 - HOLD_SIZEDIV2, getReceptorY(arrow.strumID, arrow.strumLine.ID) + ARROW_SIZEDIV2);
+					var nextPos = new Vector3D(getReceptorX(arrow.strumID, arrow.strumLine.ID) + ARROW_SIZEDIV2 - HOLD_SIZEDIV2, getReceptorY(arrow.strumID, arrow.strumLine.ID) + ARROW_SIZEDIV2);
+					thisPos = thisPos.add(getScrollPos((arrow.strumTime - Conductor.songPosition) * (0.45 * CoolUtil.quantize(arrow.strumLine.members[arrow.strumID].getScrollSpeed(arrow), 100)), arrow));
+					nextPos = nextPos.add(getScrollPos(((arrow.strumTime + (Conductor.stepCrochet / Note.HOLD_SUBDIVS)) - Conductor.songPosition) * (0.45 * CoolUtil.quantize(arrow.strumLine.members[arrow.strumID].getScrollSpeed(arrow), 100)), arrow));
 
 					for (vec in [thisPos, nextPos])
-					{				
+					{		
+						renderMods(vec, {
+							hDiff: (arrow.strumTime + (vec == nextPos ? (Conductor.stepCrochet / Note.HOLD_SUBDIVS) : 0)) - Conductor.songPosition,
+							receptor: arrow.strumID,
+							field: arrow.strumLine.ID
+						});
 						vec.z *= 0.001;
 						vec = perspective(vec);
-						vec.w = arrow.width;
-
-						vec.x -= vec.w * 0.5;
 					}
 
-					// SUSTAIN POSITIONS PREDICTIONS SECTION
-					// -------
-					// VERTICES
+					_vertices = ModchartUtil.getHoldVertex(thisPos, nextPos);
+					_uvtData = ModchartUtil.getHoldIndices(arrow);
 
-					var newVertices = [];
-
-					// top left
-					newVertices.push(thisPos.x);
-					newVertices.push(thisPos.y);
-					// top right
-					newVertices.push(thisPos.x + 44);
-					newVertices.push(thisPos.y);
-			
-					// middle left
-					newVertices.push(FlxMath.lerp(thisPos.x, nextPos.x, 0.5));
-					newVertices.push(FlxMath.lerp(thisPos.y, nextPos.y, 0.5));
-					// middle right
-					newVertices.push(FlxMath.lerp(thisPos.x + 44, nextPos.x + 44, 0.5));
-					newVertices.push(FlxMath.lerp(thisPos.y, nextPos.y, 0.5));
-			
-					// bottmo left
-					newVertices.push(nextPos.x);
-					newVertices.push(nextPos.y);
-					// bottom right
-					newVertices.push(nextPos.x + 44);
-					newVertices.push(nextPos.y);
-
-					// VERTICES
-					// ------
-					
-					_vertices = new DrawData(12, true, newVertices);
-					_indices = new DrawData(12, true, INDICES);
-
-					var newUV = [];
-					var pivot = arrow.frame.uv;
-					var graphic = arrow.frame.parent;
-
-					// frame pivot width and height are x + width and y + height (for performarce)
-					var w = pivot.width - pivot.x;
-					var h = pivot.height - pivot.y;
-					
-					// I REALLY NEED TO MAKE GRAPHICS EVERY DRAW ?!?!?!
-					// ne_eo: no (thanks !!!)
-					/*
-					newUV = [
-						// Top left
-						FlxMath.remapToRange(pivot.x, 0, w, 0, 1),
-						FlxMath.remapToRange(pivot.y, 0, h, 0, 1),
-						// top right
-						FlxMath.remapToRange(pivot.width, 0, w, 0, 1),
-						FlxMath.remapToRange(pivot.y, 0, h, 0, 1),
-						// middle left
-						FlxMath.remapToRange(pivot.x, 0, w, 0, 1),
-						FlxMath.remapToRange(pivot.y + h * 0.5, 0, h, 0, 1),
-						// middle right
-						FlxMath.remapToRange(pivot.width, 0, w, 0, 1),
-						FlxMath.remapToRange(pivot.y + h * 0.5, 0, h, 0, 1),
-						// botton left
-						FlxMath.remapToRange(pivot.x, 0, w, 0, 1),
-						FlxMath.remapToRange(pivot.height, 0, h, 0, 1),
-						// bottom right
-						FlxMath.remapToRange(pivot.width, 0, w, 0, 1),
-						FlxMath.remapToRange(pivot.height, 0, h, 0, 1)
-					];*/
-					_uvtData = new DrawData(12, true, UV_DATA);
-
-					arrow.sustainCache.loadGraphic(arrow.updateFramePixels());
+					arrow.updateFramePixels();
 					game.camHUD.drawTriangles(
-						arrow.sustainCache.graphic,
+						arrow.graphic,
 						_vertices,
 						_indices,
 						_uvtData,
@@ -345,18 +248,6 @@ class Manager extends FlxBasic
 		arrowPos = perspective(arrowPos, cast arrow);
 
         arrow.setPosition(arrowPos.x, arrowPos.y);
-
-		final Z_SCALE = 1 / arrowPos.z;
-
-		arrowPos.w = arrow.width * Z_SCALE;
-
-        if (arrow.isSustainNote)
-        {
-			arrow.updateSustain(arrow.strumLine.members[arrow.strumID]);
-
-			arrow.x += ((ARROW_SIZEDIV2 - (arrow.width * 0.5)) * Z_SCALE);
-			arrow.y += ARROW_SIZEDIV2;
-		}
     }
 	function perspective(pos:Vector3D, ?obj:FlxSprite)
 	{
@@ -404,4 +295,11 @@ class Manager extends FlxBasic
         return game.strumLines.members[field].startingPos.y;
     public function getReceptorX(lane:Int, field:Int)
         @:privateAccess
-        return game.strumLines.members[field].startingPos.x + ((ARROW_SIZ
+        return game.strumLines.members[field].startingPos.x + ((ARROW_SIZE) * lane);
+
+    private var HOLD_SIZE:Float = 44 * 0.7;
+    private var HOLD_SIZEDIV2:Float = (44 * 0.7) * 0.5;
+    private var ARROW_SIZE:Float = 160 * 0.7;
+    private var ARROW_SIZEDIV2:Float = (160 * 0.7) * 0.5;
+    private var PI:Float = Math.PI;
+}

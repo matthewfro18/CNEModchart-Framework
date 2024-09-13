@@ -8,8 +8,10 @@ class Drunk extends Modifier
 {
     override public function render(curPos:Vector3D, params:RenderParams)
     {
+        final arrowSpeed = getSubmod('drunkArrowSpeed', 1);
         final speed = getSubmod('drunkSpeed', 1);
-        final shift = params.receptor * 0.5 + params.hDiff / 222 * PI;
+        final amp = getSubmod('drunkAmplitude', 1);
+        final shift = (params.receptor * 0.5 + (params.hDiff * arrowSpeed * speed) / 222 * PI) * amp;
         final drunk = sin((params.fBeat * speed) / 4 * PI + shift) * ARROW_SIZEDIV2 / 2;
 
         curPos.x += drunk * (percent * getSubmod('drunkX', 1));
