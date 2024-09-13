@@ -11,7 +11,6 @@ using StringTools;
 @:allow(funkin.game.PlayState)
 class Note extends FlxSprite
 {
-	public var mesh:modchart.core.render.SustainRender;
     public static var HOLD_SUBDIVS:Int = 2;
 	
 	public var extra:Map<String, Dynamic> = [];

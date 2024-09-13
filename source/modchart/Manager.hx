@@ -22,7 +22,6 @@ import modchart.modifiers.*;
 import modchart.events.*;
 import modchart.events.types.*;
 import modchart.core.util.ModchartUtil;
-import modchart.core.render.SustainRender;
 import modchart.core.ModifierGroup;
 
 typedef RenderParams = {
