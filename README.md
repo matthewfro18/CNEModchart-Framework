@@ -16,15 +16,15 @@
 - [X] Basic Z Rendering (Perspective)
 - [X] Basic modifiers included by default
 - [X] Basic 3D Rotation
-- [] Rotation from different origins.
-- [] Custom Receptor & Arrow rendering (3d view)
-- [] Custom 3d view camera (using matrix)
-- [] Fix sustain size when rotating & scaling
-- [] Fix modifier indexing (via macro)
-- [] Scripted modifiera
-- [] Add patterns modifiers
-- [] Hability of modify more values on modifiers (alpha, color, angles, distances (speed), etc)
-- [] Multiple playfields support
-- [] Optimize and improve code
-- [] Add note path (like not itg)
-- [] Standalone System (Using Macros & Plugin-based Classes)
+- [ ] Rotation from different origins.
+- [ ] Custom Receptor & Arrow rendering (3d view)
+- [ ] Custom 3d view camera (using matrix)
+- [ ] Fix sustain size when rotating & scaling
+- [ ] Fix modifier indexing (via macro)
+- [ ] Scripted modifiera
+- [ ] Add patterns modifiers
+- [ ] Hability of modify more values on modifiers (alpha, color, angles, distances (speed), etc)
+- [ ] Multiple playfields support
+- [ ] Optimize and improve code
+- [ ] Add note path (like not itg)
+- [ ] Standalone System (Using Macros & Plugin-based Classes)
