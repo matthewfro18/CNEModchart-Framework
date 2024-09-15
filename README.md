@@ -8,19 +8,23 @@
 
 # Project
 
-## Current todos
-- Make sustains have perspective
-- Fix sustain offsets when reversed
-- Fix sustain size on weird angles
-- Get modifier macro working
-- Get scripted modifiers working
-- Add a lot of more modifiers (as reverse, local rotation (field rotation here, not finished), etc)
-- Add patterns modifier
-
-## Later todos
-- Make note distance modifier support (using custom vectors maybe)
-- Make posible modify more things on modifiers (alpha, color, angles, etc)
-- Multiple playfields support
-- Optimize and improve code
-- Use macros for changing source code (instead of editing files for everything)
-- Add note path rendering
+## TODOS
+- [X] Class-Modifier Support
+- [X] Ease & Set Events Timeline
+- [X] POO Oriented Coding
+- [X] Custom Hold rendering (smooth sustains)
+- [X] Basic Z Rendering (Perspective)
+- [X] Basic modifiers included by default
+- [X] Basic 3D Rotation
+- [] Rotation from different origins.
+- [] Custom Receptor & Arrow rendering (3d view)
+- [] Custom 3d view camera (using matrix)
+- [] Fix sustain size when rotating & scaling
+- [] Fix modifier indexing (via macro)
+- [] Scripted modifiera
+- [] Add patterns modifiers
+- [] Hability of modify more values on modifiers (alpha, color, angles, distances (speed), etc)
+- [] Multiple playfields support
+- [] Optimize and improve code
+- [] Add note path (like not itg)
+- [] Standalone System (Using Macros & Plugin-based Classes)
