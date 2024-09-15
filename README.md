@@ -1,5 +1,5 @@
 # CNE FunkinModchart System
-> A Modcharting framework on development for cne.
+> A Modcharting framework on development for cne. **_Under development_**
 
 ## Shotouts
 - 4mbr0s3: 3D Rotation Functions
