@@ -3,7 +3,8 @@
 
 ## Shotouts
 - 4mbr0s3: 3D Rotation Functions
-- Ne_Eo: Help with UVT data for sustains custom rendering (made me figure out how sprite sheet works) ![](https://github.com/TheoDevelops/CNEModchart-Framework/tree/main/art/nocontext.png)
+- Ne_Eo: Help with UVT data for sustains custom rendering (made me figure out how sprite sheet works)
+ ![](https://github.com/TheoDevelops/CNEModchart-Framework/blob/main/art/nocontext.png)
 - lunarcleint: Support
 
 # Project
