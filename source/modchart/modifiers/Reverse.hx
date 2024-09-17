@@ -33,10 +33,6 @@ class Reverse extends Modifier
             if(val>1)val=2-val;
         }
 
-
-       	//if(ClientPrefs.downScroll)
-        //    val = 1 - val;
-
         return val;
     }
     override public function render(curPos:Vector3D, params:RenderParams)

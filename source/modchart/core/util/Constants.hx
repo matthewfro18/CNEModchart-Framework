@@ -14,7 +14,9 @@ typedef RenderParams = {
     // Receptor ID
     receptor:Int,
     // Field ID
-    field:Int
+    field:Int,
+	// If it is an arrow of receptor,
+	arrow:Bool
 };
 typedef NoteData = {
     // Hit Time Difference
@@ -22,5 +24,7 @@ typedef NoteData = {
     // Receptor ID
     receptor:Int,
     // Field ID
-    field:Int
+    field:Int,
+	// If it is an arrow of receptor,
+	arrow:Bool
 }

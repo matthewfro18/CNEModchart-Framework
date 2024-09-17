@@ -26,6 +26,7 @@ class ModifierGroup
         'rotate' => Rotate,
         'receptorscroll' => ReceptorScroll,
 		'sawtooth' => SawTooth,
+		'braidy' => Braidy
     ];
 	private var MODIFIER_REGISTRERY:Map<String, Class<Modifier>> = GLOBAL_MODIFIERS;
 
@@ -40,6 +41,8 @@ class ModifierGroup
         {
             final perc = percs.get(data.field);
 
+			if (perc == 0)
+                continue;
 
             // Arrow Mod Updates
             renderMod(pos, mod, {
@@ -48,7 +51,8 @@ class ModifierGroup
                 fBeat: Conductor.curBeatFloat,
                 hDiff: data.hDiff,
                 receptor: data.receptor,
-                field: data.field
+                field: data.field,
+				arrow: data.arrow
             });
         }
 
@@ -68,6 +72,8 @@ class ModifierGroup
 				{
 					if (alias.toLowerCase() == name.toLowerCase())
 					{
+						//if (getPercent(alias, params.field) == 0)
+							//return;
 						modifier = mod;
 						break;
 					}

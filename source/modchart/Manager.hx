@@ -23,29 +23,9 @@ import modchart.events.*;
 import modchart.events.types.*;
 import modchart.core.util.ModchartUtil;
 import modchart.core.ModifierGroup;
+import modchart.core.util.Constants.RenderParams;
+import modchart.core.util.Constants.NoteData;
 
-typedef RenderParams = {
-    // Mod Percent
-    perc:Float,
-    // Song Position
-    sPos:Float,
-    // Beat Float
-    fBeat:Float,
-    // Hit Time Difference
-    hDiff:Float,
-    // Receptor ID
-    receptor:Int,
-    // Field ID
-    field:Int
-};
-typedef NoteData = {
-    // Hit Time Difference
-    hDiff:Float,
-    // Receptor ID
-    receptor:Int,
-    // Field ID
-    field:Int
-}
 // @:build(modchart.core.macros.Macro.buildModifiers())
 class Manager extends FlxBasic
 {
@@ -168,7 +148,8 @@ class Manager extends FlxBasic
 						renderMods(vec, {
 							hDiff: ModchartUtil.getDownscrollRatio() * ((arrow.strumTime + (vec == nextPos ? (Conductor.stepCrochet / Note.HOLD_SUBDIVS) : 0)) - Conductor.songPosition),
 							receptor: arrow.strumID,
-							field: arrow.strumLine.ID
+							field: arrow.strumLine.ID,
+							arrow: true
 						});
 						vec.z *= 0.001;
 						vec = perspective(vec);
@@ -208,7 +189,8 @@ class Manager extends FlxBasic
         renderMods(receptorPos, {
             hDiff: 0,
             receptor: lane,
-            field: field
+            field: field,
+			arrow: false
         });
 
 		receptorPos.z *= 0.001;
@@ -249,7 +231,8 @@ class Manager extends FlxBasic
         renderMods(arrowPos, {
             hDiff: diff,
             receptor: arrow.strumID,
-            field: arrow.strumLine.ID
+            field: arrow.strumLine.ID,
+			arrow: true
         });
 
 		arrowPos.z *= 0.001;
