@@ -10,11 +10,21 @@ class FieldRotate extends Modifier
 {
     override public function render(curPos:Vector3D, params:RenderParams)
     {
-        var x:Float = getReceptorX(params.receptor, params.field);
+		var x:Float = (WIDTH * 0.5) - ARROW_SIZE - 54 + ARROW_SIZE * 1.5;
+        switch (params.field)
+        {
+            case 0:
+                x -= WIDTH * 0.5 - ARROW_SIZE * 2 - 100;
+            case 1:
+                x += WIDTH * 0.5 - ARROW_SIZE * 2 - 100;
+        }
+		x -= 56;
+
 		var origin:Vector3D = new Vector3D(x, ((HEIGHT - ARROW_SIZE) * (HEIGHT / 720) * 0.5));
-		var out = ModchartUtil.rotate3DVector(curPos.subtract(origin), getSubmod('fieldRotateX'), getSubmod('fieldRotateY'), getSubmod('fieldRotateZ'));
+        var diff = curPos.subtract(origin);
+		var out = ModchartUtil.rotate3DVector(diff, getSubmod('fieldRotateX'), getSubmod('fieldRotateY'), getSubmod('fieldRotateZ'));
 		curPos.copyFrom(origin.add(out));
-		return curPos;
+        return curPos;
     }
 	override public function getAliases()
 		return ['fieldRotateX', 'fieldRotateY', 'fieldRotateZ'];

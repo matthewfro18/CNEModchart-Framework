@@ -66,6 +66,10 @@ class Manager extends FlxBasic
 		this.cameras = [game.camHUD];
         this.events = new EventManager();
 		this.modifiers = new ModifierGroup();
+
+		addSubmod('scrollAngleX');
+		addSubmod('scrollAngleY');
+		addSubmod('scrollAngleZ');
     }
 
 	public function registerModifier(name:String, mod:Class<Modifier>)   return modifiers.registerModifier(name, mod);
@@ -303,10 +307,10 @@ class Manager extends FlxBasic
 
     // HELPERS
     private function getScrollSpeed():Float return game.scrollSpeed;
-    public function getReceptorY(lane:Int, field:Int)
+    public function getReceptorY(lane:Float, field:Int)
         @:privateAccess
         return game.strumLines.members[field].startingPos.y;
-    public function getReceptorX(lane:Int, field:Int)
+    public function getReceptorX(lane:Float, field:Int)
         @:privateAccess
         return game.strumLines.members[field].startingPos.x + ((ARROW_SIZE) * lane);
 

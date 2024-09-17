@@ -11,6 +11,7 @@ import funkin.backend.system.Conductor;
 class ModifierGroup
 {
 	public static var GLOBAL_MODIFIERS:Map<String, Class<Modifier>> = [
+		'reverse' => Reverse,
         'drunk' => Drunk,
         'tipsy' => Tipsy,
         'tornado' => Tornado,
@@ -24,7 +25,7 @@ class ModifierGroup
         'fieldrotate' => FieldRotate,
         'rotate' => Rotate,
         'receptorscroll' => ReceptorScroll,
-		'sawtooth' => SawTooth
+		'sawtooth' => SawTooth,
     ];
 	private var MODIFIER_REGISTRERY:Map<String, Class<Modifier>> = GLOBAL_MODIFIERS;
 
@@ -39,8 +40,6 @@ class ModifierGroup
         {
             final perc = percs.get(data.field);
 
-			if (perc == 0)
-                continue;
 
             // Arrow Mod Updates
             renderMod(pos, mod, {

@@ -1549,6 +1549,7 @@ class PlayState extends MusicBeatState
 	 */
 	public function noteMiss(strumLine:StrumLine, note:Note, ?direction:Int, ?player:Int):Void
 	{
+		var holdRatio = (note.isSustainNote ? Note.HOLD_SUBDIVS : 1);
 		var playerID:Null<Int> = note == null ? player : strumLines.members.indexOf(strumLine);
 		var directionID:Null<Int> = note == null ? direction : note.strumID;
 		if (playerID == null || directionID == null || playerID == -1) return;
@@ -1557,7 +1558,7 @@ class PlayState extends MusicBeatState
 		strumLine.onMiss.dispatch(event);
 		if (event.cancelled) return;
 
-		if (strumLine != null) strumLine.addHealth(event.healthGain);
+		if (strumLine != null) strumLine.addHealth(event.healthGain / holdRatio);
 		if (gf != null && event.gfSad && gf.hasAnimation(event.gfSadAnim))
 			gf.playAnim(event.gfSadAnim, event.forceGfAnim, MISS);
 
