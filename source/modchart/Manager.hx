@@ -153,15 +153,20 @@ class Manager extends FlxBasic
 				if (!arrow.isSustainNote)
 					arrow.drawComplex(game.camHUD);
 				else {
-					var thisPos = new Vector3D(getReceptorX(arrow.strumID, arrow.strumLine.ID) + ARROW_SIZEDIV2 - HOLD_SIZEDIV2, getReceptorY(arrow.strumID, arrow.strumLine.ID) + ARROW_SIZEDIV2);
-					var nextPos = new Vector3D(getReceptorX(arrow.strumID, arrow.strumLine.ID) + ARROW_SIZEDIV2 - HOLD_SIZEDIV2, getReceptorY(arrow.strumID, arrow.strumLine.ID) + ARROW_SIZEDIV2);
-					thisPos = thisPos.add(getScrollPos((arrow.strumTime - Conductor.songPosition) * (0.45 * CoolUtil.quantize(arrow.strumLine.members[arrow.strumID].getScrollSpeed(arrow), 100)), arrow));
-					nextPos = nextPos.add(getScrollPos(((arrow.strumTime + (Conductor.stepCrochet / Note.HOLD_SUBDIVS)) - Conductor.songPosition) * (0.45 * CoolUtil.quantize(arrow.strumLine.members[arrow.strumID].getScrollSpeed(arrow), 100)), arrow));
+					var baseX = getReceptorX(arrow.strumID, arrow.strumLine.ID);
+					var baseY = getReceptorY(arrow.strumID, arrow.strumLine.ID);
+
+					if (ModchartUtil.getDownscroll())
+						baseY = FlxG.height - baseY - ARROW_SIZE;
+					var thisPos = new Vector3D(baseX + ARROW_SIZEDIV2 - HOLD_SIZEDIV2, baseY + ARROW_SIZEDIV2);
+					var nextPos = new Vector3D(baseX + ARROW_SIZEDIV2 - HOLD_SIZEDIV2, baseY + ARROW_SIZEDIV2);
+					thisPos = thisPos.add(getScrollPos(ModchartUtil.getDownscrollRatio() * ((arrow.strumTime - Conductor.songPosition) * (0.45 * CoolUtil.quantize(arrow.strumLine.members[arrow.strumID].getScrollSpeed(arrow), 100))), arrow));
+					nextPos = nextPos.add(getScrollPos(ModchartUtil.getDownscrollRatio() * ((arrow.strumTime + (Conductor.stepCrochet / Note.HOLD_SUBDIVS)) - Conductor.songPosition) * (0.45 * CoolUtil.quantize(arrow.strumLine.members[arrow.strumID].getScrollSpeed(arrow), 100)), arrow));
 
 					for (vec in [thisPos, nextPos])
 					{		
 						renderMods(vec, {
-							hDiff: (arrow.strumTime + (vec == nextPos ? (Conductor.stepCrochet / Note.HOLD_SUBDIVS) : 0)) - Conductor.songPosition,
+							hDiff: ModchartUtil.getDownscrollRatio() * ((arrow.strumTime + (vec == nextPos ? (Conductor.stepCrochet / Note.HOLD_SUBDIVS) : 0)) - Conductor.songPosition),
 							receptor: arrow.strumID,
 							field: arrow.strumLine.ID
 						});
@@ -213,7 +218,7 @@ class Manager extends FlxBasic
     }
 	var smoothSustains:Bool = false;
 
-	public function getScrollPos(fuck, arrow)
+	public function getScrollPos(fuck:Float, arrow:Note)
 	{
 		var scrollPos = new Vector3D(
 			0,

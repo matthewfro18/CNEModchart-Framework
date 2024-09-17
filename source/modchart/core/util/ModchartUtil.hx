@@ -4,10 +4,19 @@ import openfl.geom.Vector3D;
 import flixel.math.FlxMath;
 import flixel.graphics.tile.FlxDrawTrianglesItem.DrawData;
 import funkin.game.Note;
+import funkin.game.PlayState;
 
 // Some functions was stolen from schmovin lol
 class ModchartUtil
 {
+	public static function getDownscrollRatio()
+	{
+		return ((PlayState?.instance?.camHUD?.downscroll ?? false) ? -1 : 1);
+	}
+	public static function getDownscroll()
+	{
+		return PlayState?.instance?.camHUD?.downscroll ?? false;
+	}
     public static function rotate(x:Float, y:Float, angle:Float)
     {
         final sin = FlxMath.fastSin(angle);
