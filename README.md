@@ -17,7 +17,7 @@
 - [X] Basic Z Rendering (Perspective)
 - [X] Basic modifiers included by default
 - [X] Basic 3D Rotation
-- [ ] Rotation from different origins.
+- [X] Rotation from different origins.
 - [ ] Custom Receptor & Arrow rendering (3d view)
 - [ ] Custom 3d view camera (using matrix)
 - [ ] Fix sustain size when rotating & scaling
