@@ -12,15 +12,22 @@ class ReceptorScroll extends Modifier
 {
     override public function render(curPos:Vector3D, params:RenderParams)
     {
-		var strumTime = params.hDiff - Conductor.songPosition;
-		var time = -strumTime / Conductor.crochet / 4;
-		var alt = Math.floor(time) % 2 == 0;
-		var outTime = time % 1;
-		if (alt)
-			outTime = 1 - outTime;
-		var upscrollY = ARROW_SIZEDIV2 + 50 + (HEIGHT - 50 - ARROW_SIZE) * outTime;
-		curPos.y = FlxMath.lerp(curPos.y, upscrollY, percent);
+		final moveSpeed = Conductor.crochet * 3;
 
+		var diff = -params.hDiff;
+		var sPos = Conductor.songPosition;
+		var vDiff = -(diff - sPos) / moveSpeed;
+		var reversed = Math.floor(vDiff)%2 == 0;
+	
+		var startY = curPos.y;
+		var revPerc = reversed ? 1-vDiff%1 : vDiff%1;
+		// haha perc 30
+		var upscrollOffset = 50;
+		var downscrollOffset = HEIGHT - 150;
+	
+		var endY = upscrollOffset + ((downscrollOffset - ARROW_SIZEDIV2) * revPerc);
+	
+		curPos.y = FlxMath.lerp(startY, endY, percent);
 		return curPos;
     }
 }

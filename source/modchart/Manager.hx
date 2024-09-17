@@ -247,6 +247,20 @@ class Manager extends FlxBasic
 		arrowPos = perspective(arrowPos, cast arrow);
 
         arrow.setPosition(arrowPos.x, arrowPos.y);
+
+		// This dont work since im using camera.drawTriangles, fixing that later
+		return;
+		if (arrow.isSustainNote && arrow.wasGoodHit)
+		{
+			var len = 0.45 * CoolUtil.quantize(arrow.strumLine.members[arrow.strumID].getScrollSpeed(arrow), 100);
+			var t = FlxMath.bound((Conductor.songPosition - arrow.strumTime) / (arrow.height) * len, 0, 1);
+			var swagRect = arrow.clipRect == null ? new flixel.math.FlxRect() : arrow.clipRect;
+			swagRect.x = 0;
+			swagRect.y = t * arrow.frameHeight;
+			swagRect.width = arrow.frameWidth;
+			swagRect.height = arrow.frameHeight;
+			arrow.clipRect = swagRect;
+		}
     }
 	function perspective(pos:Vector3D, ?obj:FlxSprite)
 	{

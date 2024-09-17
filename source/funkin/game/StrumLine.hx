@@ -121,7 +121,8 @@ class StrumLine extends FlxTypedGroup<Strum> {
 				var len:Float = note.sLen;
 				while(len > 10) {
 					total++;
-					len -= Math.min(len, Conductor.stepCrochet);
+					// Fix note generation limit shit
+					len -= Math.min(len, Conductor.stepCrochet / Note.HOLD_SUBDIVS);
 				}
 			}
 		}
@@ -142,6 +143,7 @@ class StrumLine extends FlxTypedGroup<Strum> {
 				var len:Float = note.sLen;
 				var curLen:Float = 0;
 				while(len > 10) {
+					// Hold Subdivition
 					curLen = Math.min(len, Conductor.stepCrochet / Note.HOLD_SUBDIVS);
 					notes.members[total-(il++)-1] = prev = new Note(this, note, true, curLen, note.sLen - len, prev);
 					len -= curLen;

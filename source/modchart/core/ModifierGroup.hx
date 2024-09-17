@@ -23,7 +23,8 @@ class ModifierGroup
         'transform' => Transform,
         'fieldrotate' => FieldRotate,
         'rotate' => Rotate,
-        'receptorscroll' => ReceptorScroll
+        'receptorscroll' => ReceptorScroll,
+		'sawtooth' => SawTooth
     ];
 	private var MODIFIER_REGISTRERY:Map<String, Class<Modifier>> = GLOBAL_MODIFIERS;
 

@@ -8,12 +8,17 @@ class Square extends Modifier
 {
     override public function render(curPos:Vector3D, params:RenderParams)
     {
-		final period = 200;
-		final time = -params.hDiff / period + 1;
-		final phaseShift = -0.001;
-		final result = (Math.floor(time + phaseShift)) % 2 - 0.5;
+		final square = (angle:Float) -> {
+			var fAngle = angle % (PI * 2);
 
-        curPos.x += result * ARROW_SIZE * percent;
+			return fAngle >= PI ? -1.0 : 1.0;
+		};
+
+		final offset = getSubmod("squareOffset");
+		final period = getSubmod("squarePeriod");
+		final amp = (PI * (params.hDiff + offset) / (ARROW_SIZE + (period * ARROW_SIZE)));
+
+		curPos.x += percent * square(amp);
 
         return curPos;
     }

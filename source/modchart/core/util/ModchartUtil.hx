@@ -65,9 +65,10 @@ class ModchartUtil
 	public static function getHoldIndices(arrow:Note)
 	{
 		var frame = arrow.frame;
+		if (arrow.clipRect != null)
+			frame = arrow.frame.clipTo(arrow.clipRect);
 		var uv = frame.uv;
-		var graphic = frame.parent;
-		
+
 		var newUV = [
 			// Top left
 			uv.x, uv.y,
