@@ -20,9 +20,9 @@
 - [X] Rotation from different origins.
 - [ ] Custom Receptor & Arrow rendering (3d view)
 - [ ] Custom 3d view camera (using matrix)
-- [ ] Fix sustain size when rotating & scaling
+- [X] Fix sustain size and offsets when rotating & scaling
 - [ ] Fix modifier indexing (via macro)
-- [ ] Scripted modifiera
+- [ ] Scripted modifiers
 - [ ] Add patterns modifiers
 - [ ] Hability of modify more values on modifiers (alpha, color, angles, distances (speed), etc)
 - [ ] Multiple playfields support

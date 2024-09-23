@@ -82,8 +82,12 @@ class ModchartUtil
 	{
 		var newVertices = [];
 
-		final thisWidth = (HOLD_SIZE * (1 / thisPos.z * 0.001));
-		final nextWidth = (HOLD_SIZE * (1 / thisPos.z * 0.001));
+		if (Manager.DEBUG)
+		{
+			trace('A: ${thisPos.z} | B: ${nextPos.z}');
+		}
+		final thisWidth = (HOLD_SIZE * (1 / thisPos.z));
+		final nextWidth = (HOLD_SIZE * (1 / nextPos.z));
 
 		// top left
 		newVertices.push(thisPos.x);
@@ -97,7 +101,6 @@ class ModchartUtil
 		// middle right
 		newVertices.push(FlxMath.lerp(thisPos.x + thisWidth, nextPos.x + nextWidth, 0.5));
 		newVertices.push(FlxMath.lerp(thisPos.y, nextPos.y, 0.5));
-
 		// bottmo left
 		newVertices.push(nextPos.x);
 		newVertices.push(nextPos.y);
@@ -110,8 +113,6 @@ class ModchartUtil
 	public static function getHoldIndices(arrow:Note)
 	{
 		var frame = arrow.frame;
-		if (arrow.clipRect != null)
-			frame = arrow.frame.clipTo(arrow.clipRect);
 		var uv = frame.uv;
 
 		var newUV = [

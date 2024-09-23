@@ -36,6 +36,9 @@ class Manager extends FlxBasic
 
 	public var modifiers:ModifierGroup;
 
+	// was used for a sustain perspective issue
+	public static var DEBUG:Bool = false;
+
     public function new(game:PlayState)
     {
         super();
@@ -118,45 +121,6 @@ class Manager extends FlxBasic
 	var _uvtData = null;
 	var _vertices = null;
 
-	function getPointsAlongPath(width:Float, params:NoteData)
-	{
-		var currentBeat = Conductor.curBeatFloat;
-
-		var infinitesimal = 1;
-
-		var defaultPos = new Vector3D(getReceptorX(arrow.strumID, arrow.strumLine.ID), getReceptorY(arrow.strumID, arrow.strumLine.ID) - ARROW_SIZEDIV2);
-		defaultPos.incrementBy(ModchartUtil.getHalfPos());
-
-		var path1 = defaultPos.clone();
-		var path2 = defaultPos.clone();
-
-		renderMods(path1, {
-			hDiff: params.hDiff,
-			receptor: params.receptor,
-			field: params.field,
-			arrow: true
-		});
-		renderMods(path2, {
-			hDiff: params.hDiff + infinitesimal,
-			receptor: params.receptor,
-			field: params.field,
-			arrow: true
-		});
-
-		var unit = path2.subtract(path1);
-		unit.normalize();
-
-		var off1 = new Vector3D(unit.y, -unit.x);
-		var off2 = new Vector3D(-unit.y, unit.x);
-		off1.scaleBy(width / 2);
-		off2.scaleBy(width / 2);
-
-		var perp1 = path1.add(off1);
-		var perp2 = path1.add(off2);
-
-		return [perp1, perp2];
-	}
-
 	override function draw()
 	{
         for (strumLine in game.strumLines)
@@ -172,13 +136,16 @@ class Manager extends FlxBasic
 				if (!arrow.isSustainNote)
 					arrow.drawComplex(game.camHUD);
 				else {
-					var baseX = getReceptorX(arrow.strumID, arrow.strumLine.ID) + ARROW_SIZEDIV2 - HOLD_SIZEDIV2;
-					var baseY = getReceptorY(arrow.strumID, arrow.strumLine.ID) + ARROW_SIZEDIV2;
+					// TODO: Properly downscroll support
+					var basePos = new Vector3D(
+						getReceptorX(arrow.strumID, arrow.strumLine.ID),
+						getReceptorY(arrow.strumID, arrow.strumLine.ID)
+					);
 
-					if (ModchartUtil.getDownscroll())
-						baseY = FlxG.height - baseY - ARROW_SIZE;
-					var thisPos = new Vector3D(baseX, baseY, DEFAULT_Z);
-					var nextPos = new Vector3D(baseX, baseY, DEFAULT_Z);
+					var baseOffset = new Vector3D(ARROW_SIZEDIV2 - HOLD_SIZEDIV2, ARROW_SIZEDIV2);
+					
+					var thisPos = basePos.clone();
+					var nextPos = basePos.clone();
 
 					// this will be our "clip rect"
 					var clipRatio = FlxMath.bound(
@@ -188,22 +155,36 @@ class Manager extends FlxBasic
 					thisPos = thisPos.add(getScrollPos(ModchartUtil.getArrowDistance(arrow, (ARROW_SIZE * clipRatio)), arrow));
 					nextPos = nextPos.add(getScrollPos(ModchartUtil.getArrowDistance(arrow, Conductor.stepCrochet / Note.HOLD_SUBDIVS), arrow));
 					
-					for (vec in [thisPos, nextPos])
-					{		
-						renderMods(vec, {
-							hDiff: ModchartUtil.getDownscrollRatio() * ((arrow.strumTime + (vec == nextPos ? (Conductor.stepCrochet / Note.HOLD_SUBDIVS) : 0)) - Conductor.songPosition),
-							receptor: arrow.strumID,
-							field: arrow.strumLine.ID,
-							arrow: true
-						});
-						vec.z *= 0.001;
-						vec = ModchartUtil.perspective(vec);
-					}
+					// im not in "dry"
+					renderMods(thisPos, {
+						hDiff: arrow.strumTime - Conductor.songPosition,
+						receptor: arrow.strumID,
+						field: arrow.strumLine.ID,
+						arrow: true
+					});
+					thisPos.z *= 0.001;
+					thisPos = ModchartUtil.perspective(thisPos);
+
+					var thisOffset = baseOffset.clone();
+					thisOffset.scaleBy(1 / thisPos.z);
+					thisPos.incrementBy(thisOffset);
+
+					renderMods(nextPos, {
+						hDiff: (arrow.strumTime + Conductor.stepCrochet / Note.HOLD_SUBDIVS) - Conductor.songPosition,
+						receptor: arrow.strumID,
+						field: arrow.strumLine.ID,
+						arrow: true
+					});
+					nextPos.z *= 0.001;
+					nextPos = ModchartUtil.perspective(nextPos);
+
+					var nextOffset = baseOffset.clone();
+					nextOffset.scaleBy(1 / nextPos.z);
+					nextPos.incrementBy(nextOffset);
 
 					_vertices = ModchartUtil.getHoldVertex(thisPos, nextPos);
 					_uvtData = ModchartUtil.getHoldIndices(arrow);
 
-					arrow.updateFramePixels();
 					game.camHUD.drawTriangles(
 						arrow.graphic,
 						_vertices,
@@ -222,7 +203,7 @@ class Manager extends FlxBasic
 
 		super.draw();
 	}
-	public var DEFAULT_Z:Float = 1;
+	public var DEFAULT_Z:Float = 0;
     public function updateReceptor(receptor:Strum)
     {
         final lane = receptor.extra.get('lane') ?? 0;
@@ -259,16 +240,18 @@ class Manager extends FlxBasic
 	}
     public function updateArrow(arrow:Note)
     {		
-		var shit = getScrollPos((arrow.strumTime - Conductor.songPosition) * (0.45 * CoolUtil.quantize(arrow.strumLine.members[arrow.strumID].getScrollSpeed(arrow), 100)), arrow);
+		if (arrow.isSustainNote) return;
+
+		var scrollAddition = getScrollPos(ModchartUtil.getArrowDistance(arrow), arrow);
 
         final diff = arrow.strumTime - Conductor.songPosition;
 		arrow.scale.set(0.7, 0.7);
-        arrow.x = getReceptorX(arrow.strumID, arrow.strumLine.ID) + shit.x;
-        arrow.y = getReceptorY(arrow.strumID, arrow.strumLine.ID) + shit.y;
+        arrow.x = getReceptorX(arrow.strumID, arrow.strumLine.ID);
+        arrow.y = getReceptorY(arrow.strumID, arrow.strumLine.ID);
         arrow.angle = 0;
         arrow.strumRelativePos = false;
-	
-        arrowPos.setTo(arrow.x, arrow.y, DEFAULT_Z);
+        arrowPos.setTo(arrow.x, arrow.y, 0);
+		arrowPos.incrementBy(scrollAddition);
 
 		// arrowPos.add(getScrollPos(arrow));
         

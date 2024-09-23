@@ -49,7 +49,6 @@ class EventManager
 
 			event.update(curBeat);
 
-			// Si el evento ha terminado, lo removemos
 			if (event.fired) {
 				eases.remove(event);
 			}
