@@ -8,8 +8,11 @@ class Tipsy extends Modifier
 {
     override public function render(curPos:Vector3D, params:RenderParams)
     {
-        final speed = getSubmod('tipsySpeed', 1);
-        final tipsy = sin((params.fBeat * speed) / 4 * PI + params.receptor) * ARROW_SIZE / 2;
+		var perc = getSubmod('tipsy');
+		var speed = getSubmod('tipsySpeed');
+		var offset = getSubmod('tipsyOffset');
+
+		var tipsy = (cos((params.sPos * 0.001 * ((speed * 1.2) + 1.2) + params.receptor * ((offset * 1.8) + 1.8))) * ARROW_SIZE * .4);
 
         curPos.x += tipsy * getSubmod('tipsyX');
         curPos.y += tipsy * (percent * getSubmod('tipsyY', 1));

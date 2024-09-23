@@ -4,6 +4,7 @@ import flixel.FlxG;
 import funkin.game.PlayState;
 import modchart.core.util.Constants.RenderParams;
 import modchart.core.util.Constants.NoteData;
+import modchart.core.util.Constants.Visuals;
 import openfl.geom.Vector3D;
 import flixel.math.FlxMath;
 
@@ -23,7 +24,10 @@ class Modifier
     {
         return curPos;
     }
-
+	public function visuals(data:Visuals)
+	{
+		return data;
+	}
     public function getAliases():Array<String>
         return [];
 

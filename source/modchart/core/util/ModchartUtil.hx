@@ -2,11 +2,14 @@ package modchart.core.util;
 
 import openfl.geom.Vector3D;
 import flixel.math.FlxMath;
+import flixel.FlxG;
+import flixel.FlxSprite;
 import flixel.graphics.tile.FlxDrawTrianglesItem.DrawData;
 import funkin.game.Note;
 import funkin.game.PlayState;
+import funkin.backend.utils.CoolUtil;
+import funkin.backend.system.Conductor;
 
-// Some functions was stolen from schmovin lol
 class ModchartUtil
 {
 	public static function getDownscrollRatio()
@@ -42,12 +45,45 @@ class ModchartUtil
 
 		return offX;
 	}
+	public static function perspective(pos:Vector3D, ?obj:FlxSprite)
+	{
+		final tan:Float->Float = (num) -> FlxMath.fastSin(num) / FlxMath.fastCos(num);
+
+		var outPos = pos;
+
+		var halfScreenOffset = new Vector3D(FlxG.width / 2, FlxG.height / 2);
+		outPos = outPos.subtract(halfScreenOffset);
+
+		var fov = PI / 2;
+		var screenRatio = 1;
+		var near = 0;
+		var far = 1;
+
+		var perspectiveZ = outPos.z - 1;
+		if (perspectiveZ > 0)
+			perspectiveZ = 0; // To prevent coordinate overflow :/
+
+		var x = outPos.x / tan(fov / 2);
+		var y = outPos.y * screenRatio / tan(fov / 2);
+
+		var a = (near + far) / (near - far);
+		var b = 2 * near * far / (near - far);
+		var z = a * perspectiveZ + b;
+
+		var result = new Vector3D(x / z, y / z, z, outPos.w).add(halfScreenOffset);
+
+		if (obj != null) {
+			obj.scale.scale(1 / result.z);
+		}
+
+		return result;
+	}
 	public static function getHoldVertex(thisPos:Vector3D, nextPos:Vector3D)
 	{
 		var newVertices = [];
 
 		final thisWidth = (HOLD_SIZE * (1 / thisPos.z * 0.001));
-		final nextWidth = (HOLD_SIZE * (1 / nextPos.z * 0.001));
+		final nextWidth = (HOLD_SIZE * (1 / thisPos.z * 0.001));
 
 		// top left
 		newVertices.push(thisPos.x);
@@ -107,6 +143,10 @@ class ModchartUtil
 	public inline static function clamp(n:Float, l:Float, h:Float)
 	{
 		return Math.min(Math.max(n, l), h);
+	}
+	public inline static function getArrowDistance(arrow:Note, offsetMS:Float = 0)
+	{
+		return ModchartUtil.getDownscrollRatio() * (((arrow.strumTime + offsetMS) - Conductor.songPosition) * (0.45 * CoolUtil.quantize(arrow.strumLine.members[arrow.strumID].getScrollSpeed(arrow), 100)));
 	}
     public static var HOLD_SIZE:Float = 44 * 0.7;
 	public static var ARROW_SIZE:Float = 160 * 0.7;

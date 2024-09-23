@@ -4,15 +4,15 @@ import modchart.core.util.Constants.RenderParams;
 import modchart.core.util.Constants.NoteData;
 import openfl.geom.Vector3D;
 
-class Drunk extends Modifier
+class Rendering extends Modifier
 {
     override public function render(curPos:Vector3D, params:RenderParams)
     {
-		var speed = getSubmod('drunkSpeed');
-		var period = getSubmod('drunkPeriod');
-		var offset = getSubmod('drunkOffset');
-        var angle = params.sPos * 0.001 * (1 + speed) + params.receptor * ((offset * 0.2) + 0.2) + params.hDiff * ((period * 10) + 10) / HEIGHT;
-        var drunk = (cos(angle) * ARROW_SIZE * 0.5);
+        final arrowSpeed = getSubmod('drunkArrowSpeed', 1);
+        final speed = getSubmod('drunkSpeed', 1);
+        final amp = getSubmod('drunkAmplitude', 1);
+        final shift = (params.receptor * 0.5 + (params.hDiff * arrowSpeed * speed) / 222 * PI) * amp;
+        final drunk = sin((params.fBeat * speed) / 4 * PI + shift) * ARROW_SIZEDIV2 / 2;
 
         curPos.x += drunk * (percent * getSubmod('drunkX', 1));
         curPos.y += drunk * getSubmod('drunkY');
