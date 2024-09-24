@@ -7,6 +7,7 @@ import modchart.core.util.Constants.RenderParams;
 import modchart.core.util.Constants.NoteData;
 import modchart.modifiers.*;
 import funkin.backend.system.Conductor;
+import modchart.core.util.ModchartUtil;
 
 class ModifierGroup
 {
@@ -35,6 +36,13 @@ class ModifierGroup
 
 	public function new() {}
 
+	// just render mods with the perspective stuff included
+	public function getPath(pos:Vector3D, data:NoteData):Vector3D
+	{
+		pos = renderMods(pos, data);
+		pos.z *= 0.001;
+		return ModchartUtil.perspective(pos);
+	}
 	public function renderMods(pos:Vector3D, data:NoteData):Vector3D
     {
         for (mod => percs in percents)
@@ -85,7 +93,6 @@ class ModifierGroup
         modifier.percent = params.perc;
         curPos = modifier.render(curPos, params);
     }
-
 	public function registerModifier(name:String, modifier:Class<Modifier>)
 	{
 		if (MODIFIER_REGISTRERY.get(name.toLowerCase()) != null)

@@ -36,9 +36,6 @@ class Manager extends FlxBasic
 
 	public var modifiers:ModifierGroup;
 
-	// was used for a sustain perspective issue
-	public static var DEBUG:Bool = false;
-
     public function new(game:PlayState)
     {
         super();
@@ -121,6 +118,17 @@ class Manager extends FlxBasic
 	var _uvtData = null;
 	var _vertices = null;
 
+	/**
+	 * Returns the points along the hold path in a specific time
+	 * @param basePos The hold position per default
+	 */
+	public function getHoldQuad(basePos:Vector3D, params:NoteData):Vector3D
+	{
+		var leftPoint:Vector3D = modifiers.getPath(basePos.clone(), params);
+		var rightPoint:Vector3D = modifiers.getPath(basePos.clone().add(new Vector3D(HOLD_SIZE)), params);
+
+		return rightPoint.subtract(leftPoint);
+	}
 	override function draw()
 	{
         for (strumLine in game.strumLines)
@@ -147,7 +155,6 @@ class Manager extends FlxBasic
 					}
 
 					var baseOffset = new Vector3D(ARROW_SIZEDIV2 - HOLD_SIZEDIV2, ARROW_SIZEDIV2);
-					
 					var thisPos = basePos.clone();
 					var nextPos = basePos.clone();
 
@@ -156,37 +163,49 @@ class Manager extends FlxBasic
 						(Conductor.songPosition - arrow.strumTime) / (ARROW_SIZE) *
 						(0.45 * CoolUtil.quantize(arrow.strumLine.members[arrow.strumID].getScrollSpeed(arrow), 100)),
 					0, 1)) : 0;
-					thisPos = thisPos.add(getScrollPos(ModchartUtil.getArrowDistance(arrow, (ARROW_SIZE * clipRatio)), arrow));
-					nextPos = nextPos.add(getScrollPos(ModchartUtil.getArrowDistance(arrow, Conductor.stepCrochet / Note.HOLD_SUBDIVS), arrow));
+					
+					var scrollOffset = getScrollPos(ModchartUtil.getArrowDistance(arrow, (ARROW_SIZE * clipRatio)), arrow);
+					var nextScrollOffset = getScrollPos(ModchartUtil.getArrowDistance(arrow, Conductor.stepCrochet / Note.HOLD_SUBDIVS), arrow);
+					thisPos.incrementBy(scrollOffset);
+					nextPos.incrementBy(nextScrollOffset);
 					
 					// im not in "dry"
-					renderMods(thisPos, {
+					thisPos = modifiers.getPath(thisPos, {
 						hDiff: arrow.strumTime - Conductor.songPosition,
 						receptor: arrow.strumID,
 						field: arrow.strumLine.ID,
 						arrow: true
 					});
-					thisPos.z *= 0.001;
-					thisPos = ModchartUtil.perspective(thisPos);
 
 					var thisOffset = baseOffset.clone();
 					thisOffset.scaleBy(1 / thisPos.z);
 					thisPos.incrementBy(thisOffset);
 
-					renderMods(nextPos, {
+					nextPos = modifiers.getPath(nextPos, {
 						hDiff: (arrow.strumTime + Conductor.stepCrochet / Note.HOLD_SUBDIVS) - Conductor.songPosition,
 						receptor: arrow.strumID,
 						field: arrow.strumLine.ID,
 						arrow: true
 					});
-					nextPos.z *= 0.001;
-					nextPos = ModchartUtil.perspective(nextPos);
 
 					var nextOffset = baseOffset.clone();
 					nextOffset.scaleBy(1 / nextPos.z);
 					nextPos.incrementBy(nextOffset);
 
-					_vertices = ModchartUtil.getHoldVertex(thisPos, nextPos);
+					var topPoints = getHoldQuad(basePos.clone().add(scrollOffset), {
+						hDiff: arrow.strumTime - Conductor.songPosition,
+						receptor: arrow.strumID,
+						field: arrow.strumLine.ID,
+						arrow: true
+					});
+					var bottomPoints = getHoldQuad(basePos.clone().add(nextScrollOffset), {
+						hDiff: (arrow.strumTime + Conductor.stepCrochet / Note.HOLD_SUBDIVS) - Conductor.songPosition,
+						receptor: arrow.strumID,
+						field: arrow.strumLine.ID,
+						arrow: true
+					});
+
+					_vertices = ModchartUtil.getHoldVertex(thisPos, nextPos, [topPoints, bottomPoints]);
 					_uvtData = ModchartUtil.getHoldIndices(arrow);
 
 					game.camHUD.drawTriangles(
@@ -204,10 +223,7 @@ class Manager extends FlxBasic
 				}
 			});
 		}
-
-		super.draw();
 	}
-	public var DEFAULT_Z:Float = 0;
     public function updateReceptor(receptor:Strum)
     {
         final lane = receptor.extra.get('lane') ?? 0;
@@ -215,33 +231,18 @@ class Manager extends FlxBasic
 
 		receptor.scale.set(0.7, 0.7);
         receptor.setPosition(getReceptorX(lane, field), getReceptorY(lane, field));
-        receptorPos.setTo(receptor.x, receptor.y, DEFAULT_Z);
-        renderMods(receptorPos, {
+        receptorPos.setTo(receptor.x, receptor.y, 0);
+        receptorPos = modifiers.getPath(receptorPos, {
             hDiff: 0,
             receptor: lane,
             field: field,
 			arrow: false
         });
 
-		receptorPos.z *= 0.001;
-		receptorPos = ModchartUtil.perspective(receptorPos, cast receptor);
-
         receptor.setPosition(receptorPos.x, receptorPos.y);
     }
 	var smoothSustains:Bool = false;
 
-	public function getScrollPos(fuck:Float, arrow:Note)
-	{
-		var scrollPos = new Vector3D(
-			0,
-			fuck
-		);
-		var angleX = modifiers.getPercent('scrollAngleX', arrow.strumLine.ID);
-		var angleY = modifiers.getPercent('scrollAngleY', arrow.strumLine.ID);
-		var angleZ = modifiers.getPercent('scrollAngleZ', arrow.strumLine.ID);
-
-		return ModchartUtil.rotate3DVector(scrollPos, angleX, angleY, angleZ);
-	}
     public function updateArrow(arrow:Note)
     {		
 		if (arrow.isSustainNote) return;
@@ -257,25 +258,28 @@ class Manager extends FlxBasic
         arrowPos.setTo(arrow.x, arrow.y, 0);
 		arrowPos.incrementBy(scrollAddition);
 
-		// arrowPos.add(getScrollPos(arrow));
-        
-        renderMods(arrowPos, {
+        arrowPos = modifiers.getPath(arrowPos, {
             hDiff: diff,
             receptor: arrow.strumID,
             field: arrow.strumLine.ID,
 			arrow: true
         });
 
-		arrowPos.z *= 0.001;
-		arrowPos = ModchartUtil.perspective(arrowPos, cast arrow);
-
         arrow.setPosition(arrowPos.x, arrowPos.y);
     }
+
+	public function getScrollPos(distance:Float, arrow:Note)
+	{
+		var scrollPos = new Vector3D(0, distance);
+		var angleX = modifiers.getPercent('scrollAngleX', arrow.strumLine.ID);
+		var angleY = modifiers.getPercent('scrollAngleY', arrow.strumLine.ID);
+		var angleZ = modifiers.getPercent('scrollAngleZ', arrow.strumLine.ID);
+
+		return ModchartUtil.rotate3DVector(scrollPos, angleX, angleY, angleZ);
+	}
     private var receptorPos:Vector3D = new Vector3D();
     private var arrowPos:Vector3D = new Vector3D();
     private var sustainPos:Vector3D = new Vector3D();
-
-    public function renderMods(pos:Vector3D, data:NoteData):Vector3D return modifiers.renderMods(pos, data);
 
     // HELPERS
     private function getScrollSpeed():Float return game.scrollSpeed;
@@ -285,7 +289,6 @@ class Manager extends FlxBasic
     public function getReceptorX(lane:Float, field:Int)
         @:privateAccess
         return game.strumLines.members[field].startingPos.x + ((ARROW_SIZE) * lane);
-
     private var HOLD_SIZE:Float = 44 * 0.7;
     private var HOLD_SIZEDIV2:Float = (44 * 0.7) * 0.5;
     private var ARROW_SIZE:Float = 160 * 0.7;

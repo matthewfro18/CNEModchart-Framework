@@ -78,30 +78,31 @@ class ModchartUtil
 
 		return result;
 	}
-	public static function getHoldVertex(thisPos:Vector3D, nextPos:Vector3D)
+	public static function getHoldVertex(thisPos:Vector3D, nextPos:Vector3D, quads:Array<Vector3D>)
 	{
 		var newVertices = [];
-		final thisWidth = (HOLD_SIZE * (1 / thisPos.z));
-		final nextWidth = (HOLD_SIZE * (1 / nextPos.z));
+
+		final thisQuad:Vector3D = quads[0];
+		final nextQuad:Vector3D = quads[1];
 
 		// top left
 		newVertices.push(thisPos.x);
 		newVertices.push(thisPos.y);
 		// top right
-		newVertices.push(thisPos.x + thisWidth);
-		newVertices.push(thisPos.y);
+		newVertices.push(thisPos.x + thisQuad.x);
+		newVertices.push(thisPos.y + thisQuad.y);
 		// middle left
 		newVertices.push(FlxMath.lerp(thisPos.x, nextPos.x, 0.5));
 		newVertices.push(FlxMath.lerp(thisPos.y, nextPos.y, 0.5));
 		// middle right
-		newVertices.push(FlxMath.lerp(thisPos.x + thisWidth, nextPos.x + nextWidth, 0.5));
-		newVertices.push(FlxMath.lerp(thisPos.y, nextPos.y, 0.5));
+		newVertices.push(FlxMath.lerp(thisPos.x + thisQuad.x, nextPos.x + nextQuad.x, 0.5));
+		newVertices.push(FlxMath.lerp(thisPos.y + thisQuad.y, nextPos.y + nextQuad.y, 0.5));
 		// bottmo left
 		newVertices.push(nextPos.x);
 		newVertices.push(nextPos.y);
 		// bottom right
-		newVertices.push(nextPos.x + nextWidth);
-		newVertices.push(nextPos.y);
+		newVertices.push(nextPos.x + nextQuad.x);
+		newVertices.push(nextPos.y + nextQuad.y);
 
 		return new DrawData(12, true, newVertices);
 	}

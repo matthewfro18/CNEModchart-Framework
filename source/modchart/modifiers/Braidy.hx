@@ -9,17 +9,14 @@ import funkin.backend.system.Conductor;
 
 // i sawed this on a notitg modchart and i liked it some much, and i decided to recreate it
 // calling this braider cus it look like a braid looool
+// update: i just saw this is invert sine
 class Braidy extends Modifier
 {
     override public function render(curPos:Vector3D, params:RenderParams)
     {
-		if (!params.arrow)
-			return curPos;
+		var shift = ARROW_SIZE * percent * -(params.receptor % 2 - 0.5) / 0.5;
 
-		var amp:Float = Math.min(params.receptor % 3, 1);
-		amp = params.receptor == 2 ? -amp : amp;
-
-		curPos.x += ARROW_SIZE * sin(params.hDiff * amp * getSubmod('braidySpeed', 1) / 222);
+		curPos.x += sin(params.hDiff * PI / 222) * shift;
         return curPos;
     }
 }

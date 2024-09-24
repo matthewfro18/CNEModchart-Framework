@@ -27,6 +27,7 @@ class Event
     }
 	public function create() {}
 	public function getPriority() return 0;
+	
     public function setModPercent(name, value, field)
     {
         Manager.instance.setPercent(name.toLowerCase(), value, field);
