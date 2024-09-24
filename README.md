@@ -1,13 +1,11 @@
 # CNE FunkinModchart System
-> A Modcharting framework on development for cne. **_Under development_**
+> An Modchart backend library for Codename Engine. **_Under development_**
 
 ## Shotouts
 - 4mbr0s3: 3D Rotation Functions & Modifier Math
 - Riconuts: Modifier Math
 - Ne_Eo: Help with UVT data for sustains custom rendering (made me figure out how sprite sheet works) [Sustains before neeo help lol](https://github.com/TheoDevelops/CNEModchart-Framework/blob/main/art/nocontext.png)
 - lunarcleint: Support
-
-# Project
 
 ## TODOS
 - [X] Class-Modifier Support
