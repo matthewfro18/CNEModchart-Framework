@@ -141,6 +141,10 @@ class Manager extends FlxBasic
 						getReceptorX(arrow.strumID, arrow.strumLine.ID),
 						getReceptorY(arrow.strumID, arrow.strumLine.ID)
 					);
+					if (ModchartUtil.getDownscroll())
+					{
+						basePos.y = FlxG.height - basePos.y - HOLD_SIZE;
+					}
 
 					var baseOffset = new Vector3D(ARROW_SIZEDIV2 - HOLD_SIZEDIV2, ARROW_SIZEDIV2);
 					
@@ -148,10 +152,10 @@ class Manager extends FlxBasic
 					var nextPos = basePos.clone();
 
 					// this will be our "clip rect"
-					var clipRatio = FlxMath.bound(
+					var clipRatio = arrow.wasGoodHit ? (FlxMath.bound(
 						(Conductor.songPosition - arrow.strumTime) / (ARROW_SIZE) *
 						(0.45 * CoolUtil.quantize(arrow.strumLine.members[arrow.strumID].getScrollSpeed(arrow), 100)),
-					0, 1);
+					0, 1)) : 0;
 					thisPos = thisPos.add(getScrollPos(ModchartUtil.getArrowDistance(arrow, (ARROW_SIZE * clipRatio)), arrow));
 					nextPos = nextPos.add(getScrollPos(ModchartUtil.getArrowDistance(arrow, Conductor.stepCrochet / Note.HOLD_SUBDIVS), arrow));
 					
@@ -242,7 +246,7 @@ class Manager extends FlxBasic
     {		
 		if (arrow.isSustainNote) return;
 
-		var scrollAddition = getScrollPos(ModchartUtil.getArrowDistance(arrow), arrow);
+		var scrollAddition = getScrollPos(ModchartUtil.getArrowDistance(arrow, 0, false), arrow);
 
         final diff = arrow.strumTime - Conductor.songPosition;
 		arrow.scale.set(0.7, 0.7);

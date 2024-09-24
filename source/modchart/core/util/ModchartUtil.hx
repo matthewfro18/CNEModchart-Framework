@@ -14,7 +14,7 @@ class ModchartUtil
 {
 	public static function getDownscrollRatio()
 	{
-		return ((PlayState?.instance?.camHUD?.downscroll ?? false) ? -1 : 1);
+		return (ModchartUtil.getDownscroll() ? -1 : 1);
 	}
 	public static function getDownscroll()
 	{
@@ -81,11 +81,6 @@ class ModchartUtil
 	public static function getHoldVertex(thisPos:Vector3D, nextPos:Vector3D)
 	{
 		var newVertices = [];
-
-		if (Manager.DEBUG)
-		{
-			trace('A: ${thisPos.z} | B: ${nextPos.z}');
-		}
 		final thisWidth = (HOLD_SIZE * (1 / thisPos.z));
 		final nextWidth = (HOLD_SIZE * (1 / nextPos.z));
 
@@ -145,9 +140,9 @@ class ModchartUtil
 	{
 		return Math.min(Math.max(n, l), h);
 	}
-	public inline static function getArrowDistance(arrow:Note, offsetMS:Float = 0)
+	public inline static function getArrowDistance(arrow:Note, offsetMS:Float = 0, downscrollAffects:Bool = true)
 	{
-		return ModchartUtil.getDownscrollRatio() * (((arrow.strumTime + offsetMS) - Conductor.songPosition) * (0.45 * CoolUtil.quantize(arrow.strumLine.members[arrow.strumID].getScrollSpeed(arrow), 100)));
+		return (downscrollAffects ? ModchartUtil.getDownscrollRatio() : 1) * (((arrow.strumTime + offsetMS) - Conductor.songPosition) * (0.45 * CoolUtil.quantize(arrow.strumLine.members[arrow.strumID].getScrollSpeed(arrow), 100)));
 	}
     public static var HOLD_SIZE:Float = 44 * 0.7;
 	public static var ARROW_SIZE:Float = 160 * 0.7;
