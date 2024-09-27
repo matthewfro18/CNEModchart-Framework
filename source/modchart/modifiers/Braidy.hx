@@ -14,9 +14,11 @@ class Braidy extends Modifier
 {
     override public function render(curPos:Vector3D, params:RenderParams)
     {
-		var shift = ARROW_SIZE * percent * -(params.receptor % 2 - 0.5) / 0.5;
+		var shift = ARROW_SIZE * getPercent('braidy') * -(params.receptor % 2 - 0.5) / 0.5;
 
 		curPos.x += sin(params.hDiff * PI / 222) * shift;
         return curPos;
     }
+	override public function shouldRun():Bool
+		return getPercent('braidy') != 0;
 }

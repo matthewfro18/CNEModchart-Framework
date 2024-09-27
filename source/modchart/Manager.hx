@@ -47,27 +47,21 @@ class Manager extends FlxBasic
         this.events = new EventManager();
 		this.modifiers = new ModifierGroup();
 
-		addSubmod('scrollAngleX');
-		addSubmod('scrollAngleY');
-		addSubmod('scrollAngleZ');
+		setPercent('scrollAngleX', 0);
+		setPercent('scrollAngleY', 0);
+		setPercent('scrollAngleZ', 0);
     }
 
 	public function registerModifier(name:String, mod:Class<Modifier>)   return modifiers.registerModifier(name, mod);
-	public function addSubmod(name:String, defVal:Float = 0) 			 return modifiers.addSubmod(name, defVal);
     public function setPercent(name:String, value:Float, field:Int = -1) return modifiers.setPercent(name, value, field);
     public function getPercent(name:String, field:Int)    				 return modifiers.getPercent(name, field);
-    public function addModifier(name:String, defVal:Float = 0)		 	 return modifiers.addModifier(name, defVal);
+    public function addModifier(name:String)		 	 				 return modifiers.addModifier(name);
 
     public function set(name:String, beat:Float, value:Float, field:Int = -1):Void
     {
-        final percs = modifiers.getPercentsOf(name);
-
-        if (percs == null)
-            return Logs.trace('$name modifier was not found !', WARNING);
-
 		if (field == -1)
 		{
-			for (curField => _ in percs)
+			for (curField in 0...4)
 				set(name, beat, value, curField);
 			return;
 		}
@@ -75,20 +69,15 @@ class Manager extends FlxBasic
         events.add(new SetEvent(name.toLowerCase(), beat, value, field));
     }
     public function ease(name:String, beat:Float, length:Float, value:Float = 1, easeFunc:EaseFunction, field:Int = -1):Void
-    {
-        final percs = modifiers.getPercentsOf(name);
-
-		if (percs == null)
-            return Logs.trace('$name modifier was not found !', WARNING);
-
+    {	
 		if (field == -1)
 		{
-			for (curField => _ in percs)
+			for (curField in 0...4)
 				ease(name, beat, length, value, easeFunc, curField);
 			return;
 		}
 
-        events.add(new EaseEvent(name, beat, length, percs.get(field) ?? 0, value, easeFunc, field));
+        events.add(new EaseEvent(name, beat, length, getPercent(name, field), value, easeFunc, field));
     }
 
     override function update(elapsed)
@@ -122,9 +111,9 @@ class Manager extends FlxBasic
 	 * Returns the points along the hold path in a specific time
 	 * @param basePos The hold position per default
 	 */
-	public function getHoldQuad(basePos:Vector3D, params:NoteData):Vector3D
+	public function getHoldQuad(basePos:Vector3D, params:NoteData, ?firstVec:Vector3D):Vector3D
 	{
-		var leftPoint:Vector3D = modifiers.getPath(basePos.clone(), params);
+		var leftPoint:Vector3D = firstVec ?? modifiers.getPath(basePos.clone(), params);
 		var rightPoint:Vector3D = modifiers.getPath(basePos.clone().add(new Vector3D(HOLD_SIZE)), params);
 
 		return rightPoint.subtract(leftPoint);
@@ -144,42 +133,32 @@ class Manager extends FlxBasic
 				if (!arrow.isSustainNote)
 					arrow.drawComplex(game.camHUD);
 				else {
-					// TODO: Properly downscroll support
 					var basePos = new Vector3D(
 						getReceptorX(arrow.strumID, arrow.strumLine.ID),
 						getReceptorY(arrow.strumID, arrow.strumLine.ID)
 					);
 					if (ModchartUtil.getDownscroll())
-					{
 						basePos.y = FlxG.height - basePos.y - HOLD_SIZE;
-					}
 
-					var baseOffset = new Vector3D(ARROW_SIZEDIV2 - HOLD_SIZEDIV2, ARROW_SIZEDIV2);
-					var thisPos = basePos.clone();
-					var nextPos = basePos.clone();
-
-					// this will be our "clip rect"
-					var clipRatio = arrow.wasGoodHit ? (FlxMath.bound(
-						(Conductor.songPosition - arrow.strumTime) / (ARROW_SIZE) *
-						(0.45 * CoolUtil.quantize(arrow.strumLine.members[arrow.strumID].getScrollSpeed(arrow), 100)),
-					0, 1)) : 0;
+					var scrollOffset = getScrollPos(
+						ModchartUtil.getArrowDistance(arrow, (ARROW_SIZE * ModchartUtil.getClippedRatio(arrow))),
+						arrow
+					);
+					var nextScrollOffset = getScrollPos(
+						ModchartUtil.getArrowDistance(arrow, Conductor.stepCrochet / Note.HOLD_SUBDIVS),
+						arrow
+					);
 					
-					var scrollOffset = getScrollPos(ModchartUtil.getArrowDistance(arrow, (ARROW_SIZE * clipRatio)), arrow);
-					var nextScrollOffset = getScrollPos(ModchartUtil.getArrowDistance(arrow, Conductor.stepCrochet / Note.HOLD_SUBDIVS), arrow);
-					thisPos.incrementBy(scrollOffset);
-					nextPos.incrementBy(nextScrollOffset);
+					var thisPos = basePos.add(scrollOffset);
+					var nextPos = basePos.add(nextScrollOffset);
 					
-					// im not in "dry"
+					// i hate wet coding but in idk why it not work on loops
 					thisPos = modifiers.getPath(thisPos, {
 						hDiff: arrow.strumTime - Conductor.songPosition,
 						receptor: arrow.strumID,
 						field: arrow.strumLine.ID,
 						arrow: true
 					});
-
-					var thisOffset = baseOffset.clone();
-					thisOffset.scaleBy(1 / thisPos.z);
-					thisPos.incrementBy(thisOffset);
 
 					nextPos = modifiers.getPath(nextPos, {
 						hDiff: (arrow.strumTime + Conductor.stepCrochet / Note.HOLD_SUBDIVS) - Conductor.songPosition,
@@ -188,26 +167,26 @@ class Manager extends FlxBasic
 						arrow: true
 					});
 
-					var nextOffset = baseOffset.clone();
-					nextOffset.scaleBy(1 / nextPos.z);
-					nextPos.incrementBy(nextOffset);
-
-					var topPoints = getHoldQuad(basePos.clone().add(scrollOffset), {
+					// i saved 2 calls to getPath
+					var topQuad = getHoldQuad(basePos.clone().add(scrollOffset), {
 						hDiff: arrow.strumTime - Conductor.songPosition,
 						receptor: arrow.strumID,
 						field: arrow.strumLine.ID,
 						arrow: true
-					});
-					var bottomPoints = getHoldQuad(basePos.clone().add(nextScrollOffset), {
+					}, thisPos);
+					var bottomQuad = getHoldQuad(basePos.clone().add(nextScrollOffset), {
 						hDiff: (arrow.strumTime + Conductor.stepCrochet / Note.HOLD_SUBDIVS) - Conductor.songPosition,
 						receptor: arrow.strumID,
 						field: arrow.strumLine.ID,
 						arrow: true
-					});
+					}, nextPos);
 
-					_vertices = ModchartUtil.getHoldVertex(thisPos, nextPos, [topPoints, bottomPoints]);
+					thisPos = ModchartUtil.applyHoldOffset(thisPos, topQuad);
+					nextPos = ModchartUtil.applyHoldOffset(nextPos, bottomQuad);
+
+					_vertices = ModchartUtil.getHoldVertex(thisPos, nextPos, [topQuad, bottomQuad]);
 					_uvtData = ModchartUtil.getHoldIndices(arrow);
-
+					
 					game.camHUD.drawTriangles(
 						arrow.graphic,
 						_vertices,
@@ -224,6 +203,7 @@ class Manager extends FlxBasic
 			});
 		}
 	}
+
     public function updateReceptor(receptor:Strum)
     {
         final lane = receptor.extra.get('lane') ?? 0;
@@ -239,6 +219,7 @@ class Manager extends FlxBasic
 			arrow: false
         });
 
+		receptor.scale.scale(1 / receptorPos.z);
         receptor.setPosition(receptorPos.x, receptorPos.y);
     }
 	var smoothSustains:Bool = false;
@@ -265,6 +246,7 @@ class Manager extends FlxBasic
 			arrow: true
         });
 
+		arrow.scale.scale(1 / arrowPos.z);
         arrow.setPosition(arrowPos.x, arrowPos.y);
     }
 
@@ -289,6 +271,7 @@ class Manager extends FlxBasic
     public function getReceptorX(lane:Float, field:Int)
         @:privateAccess
         return game.strumLines.members[field].startingPos.x + ((ARROW_SIZE) * lane);
+		
     private var HOLD_SIZE:Float = 44 * 0.7;
     private var HOLD_SIZEDIV2:Float = (44 * 0.7) * 0.5;
     private var ARROW_SIZE:Float = 160 * 0.7;

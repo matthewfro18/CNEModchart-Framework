@@ -15,20 +15,20 @@ class Reverse extends Modifier
         var kNum = getKeycount();
         var val:Float = 0;
         if(dir>=kNum * 0.5)
-            val += getSubmod("split");
+            val += getPercent("split");
 
         if((dir%2)==1)
-            val += getSubmod("alternate");
+            val += getPercent("alternate");
 
         var first = kNum * 0.25;
         var last = kNum-1-first;
 
         if(dir>=first && dir<=last)
-            val += getSubmod("cross");
+            val += getPercent("cross");
 
-        val += percent + getSubmod("reverse" + Std.string(dir));
+        val += getPercent('reverse') + getPercent("reverse" + Std.string(dir));
 
-        if(getSubmod("unboundedReverse")==0){
+        if(getPercent("unboundedReverse")==0){
             val %=2;
             if(val>1)val=2-val;
         }
@@ -41,7 +41,7 @@ class Reverse extends Modifier
 		var reversePerc = getReverseValue(params.receptor, params.field);
 		var shift = FlxMath.lerp(initialY, HEIGHT - initialY - ARROW_SIZE, reversePerc);
 		
-		var centerPercent = getSubmod('centered');		
+		var centerPercent = getPercent('centered');		
 		shift = FlxMath.lerp(shift, (HEIGHT * 0.5) - ARROW_SIZEDIV2, centerPercent);
 		curPos.y = shift + FlxMath.lerp(params.hDiff, -params.hDiff, reversePerc);
 
@@ -49,4 +49,6 @@ class Reverse extends Modifier
     }
 	override public function getAliases()
 		return ["cross", "split", "alternate", "centered", "unboundedReverse"];
+	override public function shouldRun():Bool
+		return true;
 }

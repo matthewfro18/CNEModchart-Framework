@@ -8,18 +8,20 @@ class Drunk extends Modifier
 {
     override public function render(curPos:Vector3D, params:RenderParams)
     {
-		var speed = getSubmod('drunkSpeed');
-		var period = getSubmod('drunkPeriod');
-		var offset = getSubmod('drunkOffset');
+		var speed = getPercent('drunkSpeed');
+		var period = getPercent('drunkPeriod');
+		var offset = getPercent('drunkOffset');
         var angle = params.sPos * 0.001 * (1 + speed) + params.receptor * ((offset * 0.2) + 0.2) + params.hDiff * ((period * 10) + 10) / HEIGHT;
         var drunk = (cos(angle) * ARROW_SIZE * 0.5);
 
-        curPos.x += drunk * (percent * getSubmod('drunkX', 1));
-        curPos.y += drunk * getSubmod('drunkY');
-        curPos.z += drunk * getSubmod('drunkZ');
+        curPos.x += drunk * (getPercent('drunk') + getPercent('drunkX'));
+        curPos.y += drunk * getPercent('drunkY');
+        curPos.z += drunk * getPercent('drunkZ');
 
         return curPos;
     }
 	override public function getAliases():Array<String>
 		return ['drunkX', 'drunkY', 'drunkZ'];
+	override public function shouldRun():Bool
+		return true;
 }

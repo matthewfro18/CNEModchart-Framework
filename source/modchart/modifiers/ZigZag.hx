@@ -11,8 +11,10 @@ class ZigZag extends Modifier
 		var theta = -params.hDiff / ARROW_SIZE * PI;
 		var outRelative = Math.acos(cos(theta + PI / 2)) / PI * 2 - 1;
 
-        curPos.x += outRelative * ARROW_SIZEDIV2 * percent;
+        curPos.x += outRelative * ARROW_SIZEDIV2 * getPercent('zigZag');
 
         return curPos;
     }
+	override public function shouldRun():Bool
+		return getPercent('zigZag') != 0;
 }

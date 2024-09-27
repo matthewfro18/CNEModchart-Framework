@@ -14,12 +14,14 @@ class Square extends Modifier
 			return fAngle >= PI ? -1.0 : 1.0;
 		};
 
-		final offset = getSubmod("squareOffset");
-		final period = getSubmod("squarePeriod");
+		final offset = getPercent("squareOffset");
+		final period = getPercent("squarePeriod");
 		final amp = (PI * (params.hDiff + offset) / (ARROW_SIZE + (period * ARROW_SIZE)));
 
-		curPos.x += percent * square(amp);
+		curPos.x += getPercent('square') * square(amp);
 
         return curPos;
     }
+	override public function shouldRun():Bool
+		return getPercent('square') != 0;
 }

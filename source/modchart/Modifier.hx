@@ -13,6 +13,8 @@ using StringTools;
 class Modifier
 {
     public var percent:Float = 0;
+
+	// arguments are bad
 	public var field:Int = 0;
 
     public function new(?percent:Null<Float>)
@@ -30,18 +32,17 @@ class Modifier
 	}
     public function getAliases():Array<String>
         return [];
+	public function shouldRun():Bool
+		return false;
 
-    public function getSubmod(name:String, defValue:Float = 0):Float
+    public function getPercent(name:String, defValue:Float = 0):Float
     {
-		// definitely didnt take me a week to notice the mistake
-		if (!(Manager?.instance?.modifiers?.isModExisting(name) ?? false))
-			return defValue;
         return Manager?.instance?.modifiers?.getPercent(name, field) ?? defValue;
     }
     
 
 	private function getKeycount():Int
-		return return PlayState?.instance?.strumLines?.length ?? 2;
+		return return PlayState?.instance?.strumLines?.length ?? 4;
     // Helpers Functions
     private function getScrollSpeed():Float
         return PlayState?.instance?.scrollSpeed ?? 1;

@@ -34,6 +34,10 @@ class ModifierGroup
 	public var percents:Map<String, Map<Int, Float>> = [];
     public var modifiers:Map<String, Modifier> = [];
 
+	// apparently the maps dont care in what order you declare the values, they order them as they want
+	// i hate maps
+	public var sortedMods:Array<String> = [];
+
 	public function new() {}
 
 	// just render mods with the perspective stuff included
@@ -45,53 +49,29 @@ class ModifierGroup
 	}
 	public function renderMods(pos:Vector3D, data:NoteData):Vector3D
     {
-        for (mod => percs in percents)
-        {
-            final perc = percs.get(data.field);
+		for (name in sortedMods)
+		{
+			var mod = modifiers.get(name);
 
-			if (perc == 0)
-                continue;
+			if (!mod.shouldRun())
+				continue;
 
-            // Arrow Mod Updates
-            renderMod(pos, mod, {
-                perc: perc,
+			var args = {
+				// fuck u haxe
+                perc: 0.0,
                 sPos: Conductor.songPosition,
                 fBeat: Conductor.curBeatFloat,
                 hDiff: data.hDiff,
                 receptor: data.receptor,
                 field: data.field,
 				arrow: data.arrow
-            });
-        }
+            }
 
-        return pos;
-    }
-    public function renderMod(curPos:Vector3D, name:String, params:RenderParams)
-    {
-        var modifier = modifiers.get(name.toLowerCase());
-
-		// Or is something weird... or is a subvalue
-		if (modifier == null)
-		{
-			for (mod in modifiers)
-			{
-				final aliases = mod.getAliases();
-				for (alias in aliases)
-				{
-					if (alias.toLowerCase() == name.toLowerCase())
-					{
-						//if (getPercent(alias, params.field) == 0)
-							//return;
-						modifier = mod;
-						break;
-					}
-				}
-			}
-			return;
+			mod.field = data.field;
+			pos = mod.render(pos, args);
 		}
 
-        modifier.percent = params.perc;
-        curPos = modifier.render(curPos, params);
+        return pos;
     }
 	public function registerModifier(name:String, modifier:Class<Modifier>)
 	{
@@ -102,7 +82,7 @@ class ModifierGroup
 		}
 		MODIFIER_REGISTRERY.set(name.toLowerCase(), modifier);
 	}
-	public function addModifier(name:String, defVal:Float = 0)
+	public function addModifier(name:String)
 	{
 		var modifierClass:Null<Class<Modifier>> = MODIFIER_REGISTRERY.get(name.toLowerCase());
 		if (modifierClass == null) {
@@ -113,58 +93,20 @@ class ModifierGroup
 
 		var newModifier = Type.createInstance(modifierClass, [0]);
 		modifiers.set(name.toLowerCase(), newModifier);
-
-		percents.set(name.toLowerCase(), [
-			0=>defVal,
-			1=>defVal
-		]);
-	}
-	public function addSubmod(name:String, defVal:Float = 0)
-	{
-		percents.set(name.toLowerCase(), [
-			0=>defVal,
-			1=>defVal
-		]);
+		sortedMods.push(name.toLowerCase());
 	}
 
 	public function setPercent(name:String, value:Float, field:Int = -1)
 	{
-		final percs = percents.get(name.toLowerCase());
-
-		if (percs == null)
-			return Logs.trace('$name modifier was not found !', WARNING);
+		final percs = percents.get(name.toLowerCase()) ?? [0 => 0, 1 => 0];
 
 		if (field == -1)
-			for (k => v in percs) percs.set(k, value);
+			for (k => _ in percs) percs.set(k, value);
 		else
 			percs.set(field, value);
+
+		percents.set(name.toLowerCase(), percs);
 	}
 	public function getPercent(name:String, field:Int):Float
-	{
-		final percs = percents.get(name.toLowerCase());
-
-		if (percs == null) {
-			Logs.trace('$name modifier was not found !', WARNING);
-			return 0;
-		}
-
-		return percs.get(field);
-	}
-	
-	public function getPercentsOf(name:String):Map<Int, Float>
-	{
-		final percs = percents.get(name.toLowerCase());
-
-		if (percs == null) {
-			Logs.trace('$name modifier was not found !', WARNING);
-			return [0=>0, 1=>0];
-		}
-
-		return percs;
-	}
-
-	public function isModExisting(name:String)
-	{
-		return percents.get(name.toLowerCase()) != null;
-	}
+		return percents.get(name.toLowerCase())?.get(field) ?? 0;
 }

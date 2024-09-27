@@ -22,12 +22,14 @@ class Beat extends Modifier
     override public function render(curPos:Vector3D, params:RenderParams)
     {
         final amp = getBeatAmp(params.fBeat) * cos(params.hDiff / 45);
-        final beat = amp * ARROW_SIZE / 2 * params.perc;
+        final beat = amp * ARROW_SIZE / 2;
 
-        curPos.x += beat * (percent * getSubmod('beatX', 1));
-        curPos.y += beat * (getSubmod('beatY'));
-        curPos.z += beat * (getSubmod('beatZ'));
+        curPos.x += beat * (getPercent('beat') + getPercent('beatX'));
+        curPos.y += beat * (getPercent('beatY'));
+        curPos.z += beat * (getPercent('beatZ'));
 
         return curPos;
     }
+	override public function shouldRun():Bool
+		return true;
 }

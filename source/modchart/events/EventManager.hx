@@ -21,6 +21,14 @@ class EventManager
 			eases.push(cast event);
 		else
 			dynamics.push(cast event);
+
+		eases.sort((a, b) -> {
+            if (a.beat < b.beat)
+                return -1;
+            else if (a.beat > b.beat)
+                return 1;
+            return 0;
+        });
     }
     public function update(curBeat:Float)
     {
@@ -53,14 +61,6 @@ class EventManager
 				eases.remove(event);
 			}
 		}
-
-		eases.sort((a, b) -> {
-            if (a.beat < b.beat)
-                return -1;
-            else if (a.beat > b.beat)
-                return 1;
-            return 0;
-        });
     }
     private function sortEvents(events)
     {

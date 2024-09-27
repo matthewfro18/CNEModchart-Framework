@@ -45,7 +45,9 @@ class ModchartUtil
 
 		return offX;
 	}
-	public static function perspective(pos:Vector3D, ?obj:FlxSprite)
+
+	// from schmovin
+	public static function perspective(pos:Vector3D)
 	{
 		final tan:Float->Float = (num) -> FlxMath.fastSin(num) / FlxMath.fastCos(num);
 
@@ -72,46 +74,32 @@ class ModchartUtil
 
 		var result = new Vector3D(x / z, y / z, z, outPos.w).add(halfScreenOffset);
 
-		if (obj != null) {
-			obj.scale.scale(1 / result.z);
-		}
-
 		return result;
 	}
 	public static function getHoldVertex(thisPos:Vector3D, nextPos:Vector3D, quads:Array<Vector3D>)
 	{
-		var newVertices = [];
+		final thisQuad = quads[0];
+		final nextQuad = quads[1];
 
-		final thisQuad:Vector3D = quads[0];
-		final nextQuad:Vector3D = quads[1];
-
-		// top left
-		newVertices.push(thisPos.x);
-		newVertices.push(thisPos.y);
-		// top right
-		newVertices.push(thisPos.x + thisQuad.x);
-		newVertices.push(thisPos.y + thisQuad.y);
-		// middle left
-		newVertices.push(FlxMath.lerp(thisPos.x, nextPos.x, 0.5));
-		newVertices.push(FlxMath.lerp(thisPos.y, nextPos.y, 0.5));
-		// middle right
-		newVertices.push(FlxMath.lerp(thisPos.x + thisQuad.x, nextPos.x + nextQuad.x, 0.5));
-		newVertices.push(FlxMath.lerp(thisPos.y + thisQuad.y, nextPos.y + nextQuad.y, 0.5));
-		// bottmo left
-		newVertices.push(nextPos.x);
-		newVertices.push(nextPos.y);
-		// bottom right
-		newVertices.push(nextPos.x + nextQuad.x);
-		newVertices.push(nextPos.y + nextQuad.y);
-
-		return new DrawData(12, true, newVertices);
+		return new DrawData(12, true, [
+			// top left
+			thisPos.x, thisPos.y,
+			// top right
+			thisPos.x + thisQuad.x, thisPos.y + thisQuad.y,
+			// middle left
+			FlxMath.lerp(thisPos.x, nextPos.x, 0.5), FlxMath.lerp(thisPos.y, nextPos.y, 0.5),
+			// middle right
+			FlxMath.lerp(thisPos.x + thisQuad.x, nextPos.x + nextQuad.x, 0.5), FlxMath.lerp(thisPos.y + thisQuad.y, nextPos.y + nextQuad.y, 0.5),
+			// bottom left
+			nextPos.x, nextPos.y,
+			// bottom right
+			nextPos.x + nextQuad.x, nextPos.y + nextQuad.y
+		]);
 	}
 	public static function getHoldIndices(arrow:Note)
 	{
-		var frame = arrow.frame;
-		var uv = frame.uv;
-
-		var newUV = [
+		var uv = arrow.frame.uv;
+		return new DrawData(12, true, [
 			// Top left
 			uv.x, uv.y,
 			// top right
@@ -124,8 +112,7 @@ class ModchartUtil
 			uv.x, uv.height,
 			// bottom right
 			uv.width, uv.height
-		];
-		return new DrawData(12, true, newUV);
+		]);
 	}
 	// gonna keep this shits inline cus are basic funcions
 	public static inline function getHalfPos():Vector3D
@@ -149,4 +136,26 @@ class ModchartUtil
 	public static var ARROW_SIZE:Float = 160 * 0.7;
     public static var ARROW_SIZEDIV2:Float = (160 * 0.7) * 0.5;
     public static var PI:Float = Math.PI;
+
+	public static function applyHoldOffset(curPos:Vector3D, quad:Vector3D)
+	{
+		var outOffset = ModchartUtil.getHalfPos();
+
+		var quadOffset = quad.clone();
+		quadOffset.scaleBy(.5);
+
+		outOffset.decrementBy(quadOffset);
+		outOffset.scaleBy(1 / curPos.z);
+
+		curPos.incrementBy(outOffset);
+
+		return curPos;
+	}
+	public static function getClippedRatio(arrow:Note)
+	{
+		return arrow.wasGoodHit ? (FlxMath.bound(
+			(Conductor.songPosition - arrow.strumTime) / (ARROW_SIZE) *
+			(0.45 * CoolUtil.quantize(arrow.strumLine.members[arrow.strumID].getScrollSpeed(arrow), 100)),
+		0, 1)) : 0;
+	}
 }

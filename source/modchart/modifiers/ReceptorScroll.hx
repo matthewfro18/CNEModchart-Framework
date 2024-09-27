@@ -27,7 +27,9 @@ class ReceptorScroll extends Modifier
 	
 		var endY = upscrollOffset + ((downscrollOffset - ARROW_SIZEDIV2) * revPerc);
 	
-		curPos.y = FlxMath.lerp(startY, endY, percent);
+		curPos.y = FlxMath.lerp(startY, endY, getPercent('receptorScroll'));
 		return curPos;
     }
+	override public function shouldRun():Bool
+		return getPercent('receptorScroll') != 0;
 }
