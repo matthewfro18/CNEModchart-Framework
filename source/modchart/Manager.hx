@@ -47,9 +47,14 @@ class Manager extends FlxBasic
         this.events = new EventManager();
 		this.modifiers = new ModifierGroup();
 
-		setPercent('scrollAngleX', 0);
-		setPercent('scrollAngleY', 0);
-		setPercent('scrollAngleZ', 0);
+		for (strumLine in game.strumLines)
+		{
+			strumLine.forEach(strum -> {
+				strum.extra.set('field', strumLine.ID);
+				// i guess ???
+				strum.extra.set('lane', strumLine.members.indexOf(strum));
+			});
+		}
     }
 
 	public function registerModifier(name:String, mod:Class<Modifier>)   return modifiers.registerModifier(name, mod);
@@ -88,11 +93,11 @@ class Manager extends FlxBasic
         // Update Modifiers
         for (strumLine in game.strumLines)
         {
+			strumLine.notes.forEachAlive(note -> {
+                updateArrow(note);
+            });
             strumLine.forEach(strum -> {
                 updateReceptor(strum);
-            });
-            strumLine.notes.forEachAlive(note -> {
-                updateArrow(note);
             });
         }
     }
@@ -181,6 +186,24 @@ class Manager extends FlxBasic
 						arrow: true
 					}, nextPos);
 
+					final thisVisuals = modifiers.getVisuals({
+						hDiff: arrow.strumTime - Conductor.songPosition,
+						receptor: arrow.strumID,
+						field: arrow.strumLine.ID,
+						arrow: true
+					});
+					final nextVisuals = modifiers.getVisuals({
+						hDiff: (arrow.strumTime + Conductor.stepCrochet / Note.HOLD_SUBDIVS) - Conductor.songPosition,
+						receptor: arrow.strumID,
+						field: arrow.strumLine.ID,
+						arrow: true
+					});
+					arrow.alpha = thisVisuals.alpha * 0.6;
+					topQuad.x *= thisVisuals.scaleX;
+					topQuad.y *= thisVisuals.scaleY;
+					bottomQuad.x *= nextVisuals.scaleX;
+					bottomQuad.y *= nextVisuals.scaleY;
+
 					thisPos = ModchartUtil.applyHoldOffset(thisPos, topQuad);
 					nextPos = ModchartUtil.applyHoldOffset(nextPos, bottomQuad);
 
@@ -209,18 +232,26 @@ class Manager extends FlxBasic
         final lane = receptor.extra.get('lane') ?? 0;
         final field = receptor.extra.get('field') ?? 0;
 
-		receptor.scale.set(0.7, 0.7);
-        receptor.setPosition(getReceptorX(lane, field), getReceptorY(lane, field));
-        receptorPos.setTo(receptor.x, receptor.y, 0);
-        receptorPos = modifiers.getPath(receptorPos, {
-            hDiff: 0,
+		final noteData = {
+            hDiff: 0.,
             receptor: lane,
             field: field,
 			arrow: false
-        });
+        };
+		final visuals = modifiers.getVisuals(noteData);
+		
+		receptor.scale.set(0.7, 0.7);
+        receptor.setPosition(getReceptorX(lane, field), getReceptorY(lane, field));
+        receptorPos.setTo(receptor.x, receptor.y, 0);
+        receptorPos = modifiers.getPath(receptorPos, noteData);
 
 		receptor.scale.scale(1 / receptorPos.z);
         receptor.setPosition(receptorPos.x, receptorPos.y);
+
+		receptor.scale.x *= visuals.scaleX;
+		receptor.scale.y *= visuals.scaleY;
+		receptor.alpha = visuals.alpha;
+		receptor.angle = visuals.angle;
     }
 	var smoothSustains:Bool = false;
 
@@ -231,6 +262,14 @@ class Manager extends FlxBasic
 		var scrollAddition = getScrollPos(ModchartUtil.getArrowDistance(arrow, 0, false), arrow);
 
         final diff = arrow.strumTime - Conductor.songPosition;
+		final noteData = {
+            hDiff: diff,
+            receptor: arrow.strumID,
+            field: arrow.strumLine.ID,
+			arrow: false
+        };
+		final visuals = modifiers.getVisuals(noteData);
+
 		arrow.scale.set(0.7, 0.7);
         arrow.x = getReceptorX(arrow.strumID, arrow.strumLine.ID);
         arrow.y = getReceptorY(arrow.strumID, arrow.strumLine.ID);
@@ -239,15 +278,15 @@ class Manager extends FlxBasic
         arrowPos.setTo(arrow.x, arrow.y, 0);
 		arrowPos.incrementBy(scrollAddition);
 
-        arrowPos = modifiers.getPath(arrowPos, {
-            hDiff: diff,
-            receptor: arrow.strumID,
-            field: arrow.strumLine.ID,
-			arrow: true
-        });
+        arrowPos = modifiers.getPath(arrowPos, noteData);
 
 		arrow.scale.scale(1 / arrowPos.z);
         arrow.setPosition(arrowPos.x, arrowPos.y);
+
+		arrow.scale.x *= visuals.scaleX;
+		arrow.scale.y *= visuals.scaleY;
+		arrow.alpha = visuals.alpha;
+		arrow.angle = visuals.angle;
     }
 
 	public function getScrollPos(distance:Float, arrow:Note)

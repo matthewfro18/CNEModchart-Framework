@@ -28,13 +28,9 @@ typedef NoteData = {
 	// If it is an arrow of receptor,
 	arrow:Bool
 }
-
-class Visuals
-{
-	public var scaleX:Float;
-	public var scaleY:Float;
-	public var alpha:Float;
-	public var r:Float;
-	public var g:Float;
-	public var b:Float;
+typedef Visuals = {
+	scaleX:Float,
+	scaleY:Float,
+	alpha:Float,
+	angle:Float
 }

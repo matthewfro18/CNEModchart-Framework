@@ -1,7 +1,10 @@
 import modchart.Manager;
 import modchart.core.util.ModchartUtil;
-import modchart.core.ScriptedModifier;
+import modchart.core.ModifierGroup;
+import modchart.modifiers.Drunk;
 import openfl.geom.Vector3D;
+
+var newModchartAdditions = false;
 
 function postCreate()
 {
@@ -19,19 +22,21 @@ function youneverstoleacat()
 	// seriusly, especially with mods that modify the y pos (they wont work!!!)
 	modchart.addModifier('reverse');
 	modchart.addModifier('invert');
-	modchart.addModifier('opponentSwap');
 	modchart.addModifier('transform');
 	modchart.addModifier('drunk');
 	modchart.addModifier('tipsy');
 	modchart.addModifier('beat');
+	modchart.addModifier('opponentSwap');
 
 	// ROTATE ALWAYS ON THE BOTTOM KIDS !!
 	// i recomend this but this but is not thaat necesary
 	modchart.addModifier('rotate');
 	modchart.addModifier('fieldRotate');
 
-	trace(modchart.modifiers.sortedMods);
+	modchart.addModifier('scale');
+	modchart.addModifier('alpha');
 
+	modchart.setPercent('alpha', 0);
 	kicks = [
         16,
         80,
@@ -56,7 +61,14 @@ function youneverstoleacat()
 	var m = 1;
 
 	modchart.set('opponentSwap', 0, 0.5);
+
+	modchart.set('alpha', 4, 0.75, 0);
+	modchart.set('alpha', 4, 1, 1);
+
+	modchart.set('scaleX', 80 / 4, 1.6);
+	modchart.ease('scaleX', 80 / 4, 1, 1, FlxEase.cubeOut);
 	modchart.ease('opponentSwap', 80 / 4, 1, 0, FlxEase.quadOut);
+	modchart.ease('alpha', 80 / 4, 1, 1, FlxEase.cubeOut, 0);
 
 	for(i in 0...kicks.length)
 	{
@@ -78,6 +90,13 @@ function youneverstoleacat()
 			modchart.ease('x', beat, 2, 0, FlxEase.quartOut);
 			modchart.set('tipsy', beat, m);
 			modchart.ease('tipsy', beat, 2, 0, FlxEase.cubeOut);
+
+			if (newModchartAdditions)
+			{
+				var scaleAxis = m == -1 ? 'scaleX' : 'scaleY';
+				modchart.set(scaleAxis, beat, 0.5);
+				modchart.ease(scaleAxis, beat, 2, 0, FlxEase.quartOut);
+			}
 		}
     }
 	modchart.set('beat', 144 / 4, 0.75);
@@ -104,21 +123,25 @@ function youneverstoleacat()
 		modchart.set('tipsy', step, 1.25);
 		modchart.set('tipsyOffset', step, .25);
 		modchart.set('x', step, -75);
-		// modchart.set('tiny', step, -25 * 0.01);
+		modchart.set('tiny', step, 0.25);
+
 		modchart.ease('x', step, dur, 0, FlxEase.cubeOut);
 		modchart.ease('tipsy', step, dur, 0, FlxEase.cubeOut);
 		modchart.ease('tipsyOffset', step, dur, 0, FlxEase.cubeOut);
-		// modchart.ease('tiny', step, step + dur, 0, FlxEase.quadOut);
+		modchart.ease('tiny', step, dur, 0, FlxEase.quadOut);
     }
 	for (i in 0...snares.length)
 	{
         var step = snares[i] / 4;
 		var dur = 1; // 4 / 4
 		modchart.set('x', step, -150);
-		// modchart.set('tiny', step, -25 * 0.01);
+		modchart.set('tiny', step, -0.25);
+		
 		modchart.ease('x', step, dur, 0, FlxEase.cubeOut);
-		// modchart.ease('tiny', step, step + dur, 0, FlxEase.quadOut);
+		modchart.ease('tiny', step, dur, 0, FlxEase.quadOut);
     }
+
+	modchart.ease('alpha', 264 / 4, 1, 0.25, FlxEase.cubeOut, 0);
 
 	queueFunc(272, 400, function(event, cDS:Float){
         var pos = pos = (cDS - 272) / 4 + 1.5;
@@ -142,6 +165,8 @@ function youneverstoleacat()
 	for(i in 0...4)
         modchart.ease('x' + i, 400 / 4, 1, 0, FlxEase.quadOut);
 
+	modchart.set('alpha', 404 / 4, 1, 0);
+
 	// PENDING MODIFIERS, DO NOT FORGET IT THEO !!1!
 	modchart.ease('opponentSwap', 400 / 4, 0.5, 0.5, FlxEase.quadOut, 1);
 	modchart.ease('opponentSwap', 400 / 4, 0.5, -1.25, FlxEase.quadOut, 0);
@@ -153,15 +178,15 @@ function youneverstoleacat()
 	modchart.ease("reverse", 430 / 4, 2 / 4, 0, FlxEase.backOut, 1);
 
 	// elastic 2
-	modchart.ease("fieldRotateY", 456 / 4, 1, 85, FlxEase.quadIn, 1);
-	modchart.ease("fieldRotateY", 460 / 4, 10 / 4, -360 *3, FlxEase.elasticOut, 1);
-	modchart.set("fieldRotateY", 470 / 4, 0, 1);
+	modchart.ease("rotateY", 456 / 4, 1, 85, FlxEase.quadIn, 1);
+	modchart.ease("rotateY", 460 / 4, 10 / 4, -360 *3, FlxEase.elasticOut, 1);
+	modchart.set("rotateY", 470 / 4, 0, 1);
 
     // elastic 3
-	modchart.ease("fieldRotateX", 488 / 4, (492 - 488) / 4, -25, FlxEase.quadIn, 1);
-	modchart.ease("fieldRotateX", 492 / 4, 8 / 4, 180, FlxEase.elasticOut, 1);
-	modchart.set("fieldRotateX", 500 / 4, 0, 1);
-	modchart.set("reverse", 500 / 4, 1, 1);
+	modchart.ease("rotateX", 488 / 4, (492 - 488) / 4, -25, FlxEase.quadIn, 1);
+	modchart.ease("rotateX", 492 / 4, 8 / 4, 180, FlxEase.elasticOut, 1);
+	modchart.set("rotateX", 500 / 4, 0, 1);
+	// modchart.set("reverse", 500 / 4, 1, 1);
 
 	// elastic 4
 	modchart.ease("flip", 520 / 4, 1, 0.25, FlxEase.quadIn, 1);
@@ -200,11 +225,4 @@ function numericForInterval(start, end, interval, func){
         func(index);
         index += interval;
     }
-}
-
-// needed for modchart backend
-function onStrumCreation(ev)
-{
-	ev.strum.extra.set('lane', ev.strumID);
-	ev.strum.extra.set('field', ev.player);
 }

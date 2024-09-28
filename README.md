@@ -19,10 +19,14 @@
 - [ ] Custom Receptor & Arrow rendering (3d view)
 - [ ] Custom 3d view camera (using matrix)
 - [X] Fix sustain size and offsets when rotating & scaling
-- [ ] Fix modifier indexing (via macro)
+- [X] Fix modifier indexing
 - [ ] Scripted modifiers
 - [ ] Add patterns modifiers
-- [ ] Hability of modify more values on modifiers (alpha, color, angles, distances (speed), etc)
+- [X] Hability of modify more values on modifiers (alpha, color, angles, distances (speed), etc)
+   - [X] Alpha
+   - [X] Angle
+   - [X] Scale
+   - [ ] Color Transform
 - [ ] Multiple playfields support
 - [ ] Optimize and improve code
 - [ ] Add note path (like not itg)

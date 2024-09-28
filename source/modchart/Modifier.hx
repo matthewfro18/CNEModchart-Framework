@@ -26,18 +26,26 @@ class Modifier
     {
         return curPos;
     }
-	public function visuals(data:Visuals)
+	public function visuals(data:Visuals, params:RenderParams)
 	{
 		return data;
+	}
+	public function rotateScroll(curScroll:Vector3D):Vector3D
+	{
+		return curScroll;
 	}
     public function getAliases():Array<String>
         return [];
 	public function shouldRun():Bool
 		return false;
 
-    public function getPercent(name:String, defValue:Float = 0):Float
+    public function setPercent(name:String, value:Float, ?cField:Int)
     {
-        return Manager?.instance?.modifiers?.getPercent(name, field) ?? defValue;
+        Manager?.instance?.modifiers?.setPercent(name, value, cField ?? field);
+    }
+	public function getPercent(name:String):Float
+    {
+        return Manager?.instance?.modifiers?.getPercent(name, field);
     }
     
 

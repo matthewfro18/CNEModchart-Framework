@@ -3,6 +3,7 @@ package modchart.core;
 import openfl.geom.Vector3D;
 import funkin.backend.system.Logs;
 import modchart.Modifier;
+import modchart.core.util.Constants.Visuals;
 import modchart.core.util.Constants.RenderParams;
 import modchart.core.util.Constants.NoteData;
 import modchart.modifiers.*;
@@ -27,7 +28,10 @@ class ModifierGroup
         'rotate' => Rotate,
         'receptorscroll' => ReceptorScroll,
 		'sawtooth' => SawTooth,
-		'braidy' => Braidy
+		'braidy' => Braidy,
+		'confusion' => Confusion,
+		'alpha' => Alpha,
+		'scale' => Scale
     ];
 	private var MODIFIER_REGISTRERY:Map<String, Class<Modifier>> = GLOBAL_MODIFIERS;
 
@@ -46,6 +50,39 @@ class ModifierGroup
 		pos = renderMods(pos, data);
 		pos.z *= 0.001;
 		return ModchartUtil.perspective(pos);
+	}
+	public function getVisuals(data:NoteData):Visuals
+	{
+		var visuals = {
+			scaleX: 1.,
+			scaleY: 1.,
+			angle: 0.,
+			alpha: 1.
+		};
+
+		for (name in sortedMods)
+		{
+			var mod = modifiers.get(name);
+
+			if (!mod.shouldRun())
+				continue;
+
+			var args = {
+				// fuck u haxe
+                perc: 0.0,
+                sPos: Conductor.songPosition,
+                fBeat: Conductor.curBeatFloat,
+                hDiff: data.hDiff,
+                receptor: data.receptor,
+                field: data.field,
+				arrow: data.arrow
+            }
+
+			mod.field = data.field;
+			visuals = mod.visuals(visuals, args);
+		}
+
+		return visuals;
 	}
 	public function renderMods(pos:Vector3D, data:NoteData):Vector3D
     {
@@ -91,7 +128,7 @@ class ModifierGroup
 			return;
 		}
 
-		var newModifier = Type.createInstance(modifierClass, [0]);
+		var newModifier = Type.createInstance(modifierClass, []);
 		modifiers.set(name.toLowerCase(), newModifier);
 		sortedMods.push(name.toLowerCase());
 	}

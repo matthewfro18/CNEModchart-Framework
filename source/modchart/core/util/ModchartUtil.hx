@@ -158,4 +158,11 @@ class ModchartUtil
 			(0.45 * CoolUtil.quantize(arrow.strumLine.members[arrow.strumID].getScrollSpeed(arrow), 100)),
 		0, 1)) : 0;
 	}
+	public static function lerpVector3D(start:Vector3D, end:Vector3D, ratio:Float)
+	{
+		final diff = end.subtract(start);
+		diff.scaleBy(ratio);
+
+		return start.add(diff);
+	}
 }
