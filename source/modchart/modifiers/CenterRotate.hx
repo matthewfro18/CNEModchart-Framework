@@ -6,24 +6,14 @@ import modchart.core.util.Constants.NoteData;
 import openfl.geom.Vector3D;
 import flixel.FlxG;
 
-class FieldRotate extends Rotate
+class CenterRotate extends Rotate
 {
 	override public function getOrigin(curPos:Vector3D, params:RenderParams):Vector3D
 	{
-		var x:Float = (WIDTH * 0.5) - ARROW_SIZE - 54 + ARROW_SIZE * 1.5;
-        switch (params.field)
-        {
-            case 0:
-                x -= WIDTH * 0.5 - ARROW_SIZE * 2 - 100;
-            case 1:
-                x += WIDTH * 0.5 - ARROW_SIZE * 2 - 100;
-        }
-		x -= 56;
-
-		return new Vector3D(x, ((HEIGHT - ARROW_SIZE) * (HEIGHT / 720) * 0.5));
+		return new Vector3D(FlxG.width * 0.5, (HEIGHT - ARROW_SIZE) * (720 / HEIGHT) * 0.5);
 	}
 	override public function getRotateName():String
-		return 'fieldRotate';
+		return 'centerRotate';
 
 	override public function shouldRun():Bool
 		return true;

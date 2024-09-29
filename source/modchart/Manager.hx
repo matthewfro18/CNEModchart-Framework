@@ -199,10 +199,14 @@ class Manager extends FlxBasic
 						arrow: true
 					});
 					arrow.alpha = thisVisuals.alpha * 0.6;
-					topQuad.x *= thisVisuals.scaleX;
-					topQuad.y *= thisVisuals.scaleY;
-					bottomQuad.x *= nextVisuals.scaleX;
-					bottomQuad.y *= nextVisuals.scaleY;
+
+					// apply scale and zoom
+					topQuad.x *= thisVisuals.scaleX * thisVisuals.zoom;
+					topQuad.y *= thisVisuals.scaleY * thisVisuals.zoom;
+					bottomQuad.x *= nextVisuals.scaleX * nextVisuals.zoom;
+					bottomQuad.y *= nextVisuals.scaleY * nextVisuals.zoom;
+					thisPos = ModchartUtil.applyVectorZoom(thisPos, thisVisuals.zoom);
+					nextPos = ModchartUtil.applyVectorZoom(nextPos, nextVisuals.zoom);
 
 					thisPos = ModchartUtil.applyHoldOffset(thisPos, topQuad);
 					nextPos = ModchartUtil.applyHoldOffset(nextPos, bottomQuad);
@@ -248,6 +252,7 @@ class Manager extends FlxBasic
 		receptor.scale.scale(1 / receptorPos.z);
         receptor.setPosition(receptorPos.x, receptorPos.y);
 
+		ModchartUtil.applyObjectZoom(receptor, visuals.zoom);
 		receptor.scale.x *= visuals.scaleX;
 		receptor.scale.y *= visuals.scaleY;
 		receptor.alpha = visuals.alpha;
@@ -283,6 +288,7 @@ class Manager extends FlxBasic
 		arrow.scale.scale(1 / arrowPos.z);
         arrow.setPosition(arrowPos.x, arrowPos.y);
 
+		ModchartUtil.applyObjectZoom(arrow, visuals.zoom);
 		arrow.scale.x *= visuals.scaleX;
 		arrow.scale.y *= visuals.scaleY;
 		arrow.alpha = visuals.alpha;

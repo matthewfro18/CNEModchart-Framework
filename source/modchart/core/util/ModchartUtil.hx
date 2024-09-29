@@ -165,4 +165,30 @@ class ModchartUtil
 
 		return start.add(diff);
 	}
+
+	public static function applyVectorZoom(vec:Vector3D, zoom:Float)
+	{
+		if(zoom != 1){
+			var centerX = FlxG.width * 0.5;
+			var centerY = FlxG.height * 0.5;
+
+			vec.x = (vec.x - centerX) * zoom + centerX;
+			vec.y = (vec.y - centerY) * zoom + centerY;
+		}
+
+		return vec;
+	}
+	public static function applyObjectZoom(obj:FlxSprite, zoom:Float)
+	{
+		if(zoom != 1){
+			var centerX = FlxG.width * 0.5;
+			var centerY = FlxG.height * 0.5;
+
+			obj.scale.scale(zoom);
+			obj.x = (obj.x - centerX) * zoom + centerX;
+			obj.y = (obj.y - centerY) * zoom + centerY;
+		}
+
+		return obj;
+	}
 }

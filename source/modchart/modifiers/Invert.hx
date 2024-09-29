@@ -15,8 +15,6 @@ class Invert extends Modifier
 
         return curPos;
     }
-	override public function getAliases():Array<String>
-		return ['flip'];
 
 	override public function shouldRun():Bool
 		return true;

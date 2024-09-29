@@ -32,5 +32,6 @@ typedef Visuals = {
 	scaleX:Float,
 	scaleY:Float,
 	alpha:Float,
-	angle:Float
+	angle:Float,
+	zoom:Float
 }

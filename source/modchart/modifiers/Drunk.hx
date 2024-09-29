@@ -20,8 +20,6 @@ class Drunk extends Modifier
 
         return curPos;
     }
-	override public function getAliases():Array<String>
-		return ['drunkX', 'drunkY', 'drunkZ'];
 	override public function shouldRun():Bool
 		return true;
 }

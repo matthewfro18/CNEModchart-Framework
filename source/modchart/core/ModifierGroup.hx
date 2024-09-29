@@ -14,6 +14,8 @@ class ModifierGroup
 {
 	public static var GLOBAL_MODIFIERS:Map<String, Class<Modifier>> = [
 		'reverse' => Reverse,
+        'transform' => Transform,
+		'opponentswap' => OpponentSwap,
         'drunk' => Drunk,
         'tipsy' => Tipsy,
         'tornado' => Tornado,
@@ -22,13 +24,13 @@ class ModifierGroup
         'zigzag' => ZigZag,
         'beat' => Beat,
 		'accelerate' => Accelerate,
-		'opponentswap' => OpponentSwap,
-        'transform' => Transform,
-        'fieldrotate' => FieldRotate,
-        'rotate' => Rotate,
         'receptorscroll' => ReceptorScroll,
 		'sawtooth' => SawTooth,
 		'braidy' => Braidy,
+		'mini' => Mini,
+        'rotate' => Rotate,
+        'fieldrotate' => FieldRotate,
+        'centerrotate' => CenterRotate,
 		'confusion' => Confusion,
 		'alpha' => Alpha,
 		'scale' => Scale
@@ -57,7 +59,8 @@ class ModifierGroup
 			scaleX: 1.,
 			scaleY: 1.,
 			angle: 0.,
-			alpha: 1.
+			alpha: 1.,
+			zoom: 1.
 		};
 
 		for (name in sortedMods)

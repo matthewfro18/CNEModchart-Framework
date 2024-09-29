@@ -47,8 +47,6 @@ class Reverse extends Modifier
 
 		return curPos;
     }
-	override public function getAliases()
-		return ["cross", "split", "alternate", "centered", "unboundedReverse"];
 	override public function shouldRun():Bool
 		return true;
 }

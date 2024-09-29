@@ -17,4 +17,6 @@ class ZigZag extends Modifier
     }
 	override public function shouldRun():Bool
 		return getPercent('zigZag') != 0;
+	override public function getAliases():Array<String>
+		return ["triangle", "trianglePath", "zigZagPath"];
 }
