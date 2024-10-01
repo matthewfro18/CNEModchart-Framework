@@ -33,7 +33,7 @@ class ModifierGroup
         'fieldrotate' => FieldRotate,
         'centerrotate' => CenterRotate,
 		'confusion' => Confusion,
-		'alpha' => Alpha,
+		'stealth' => Stealth,
 		'scale' => Scale
     ];
 	private var MODIFIER_REGISTRERY:Map<String, Class<Modifier>> = GLOBAL_MODIFIERS;

@@ -1,5 +1,7 @@
 package modchart.core.util;
 
+import flixel.util.FlxColor;
+
 class Constants {}
 
 typedef RenderParams = {
