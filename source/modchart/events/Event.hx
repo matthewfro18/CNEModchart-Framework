@@ -7,26 +7,36 @@ class Event
     /**
      * The beat where the event will be executed
      */
+	public var name:String;
     public var beat:Float;
-    public var callback:Void->Void;
+    public var field:Int;
 
+    public var callback:Void->Void;
+	public var parent:EventManager;
+
+	private var mercy:Bool = false;
     public var fired:Bool = false;
 
-    public function new(beat:Float, callback:Void->Void)
+	public var active:Bool = false;
+
+
+    public function new(beat:Float, callback:Void->Void, parent:EventManager, ?mercy:Bool = false)
     {
         this.beat = beat;
         this.callback = callback;
+		this.mercy = mercy;
+
+		this.parent = parent;
     }
     public function update(curBeat:Float)
     {
         if (curBeat >= beat) {
             callback();
 
-            fired = true;
+            fired = !mercy;
         }
     }
 	public function create() {}
-	public function getPriority() return 0;
 	
     public function setModPercent(name, value, field)
     {
@@ -34,6 +44,6 @@ class Event
     }
 	public function getModPercent(name, field):Float
 	{
-		return Manager?.instance?.modifiers?.getPercent(name, field) ?? 0;
+		return Manager?.instance?.getPercent(name, field) ?? 0;
 	}
 }

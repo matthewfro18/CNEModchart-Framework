@@ -17,6 +17,7 @@ class ModifierGroup
         'transform' => Transform,
 		'opponentswap' => OpponentSwap,
         'drunk' => Drunk,
+        'bumpy' => Bumpy,
         'tipsy' => Tipsy,
         'tornado' => Tornado,
         'invert' => Invert,

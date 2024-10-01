@@ -4,72 +4,73 @@ import modchart.events.types.*;
 
 class EventManager
 {
-    var sets:Array<SetEvent> = [];
-    var eases:Array<EaseEvent> = [];
-	var dynamics:Array<Event> = [];
+	var table:Map<String, Array<Array<Event>>> = [];
 
-    public function new()
-    {
-
-    }
+    public function new() {};
 
     public function add(event:Event)
     {
-        if (event is SetEvent)
-			sets.push(cast event);
-		else if (event is EaseEvent)
-			eases.push(cast event);
-		else
-			dynamics.push(cast event);
+		if (table[event.name] == null)
+			table[event.name] = [[], []];
 
-		eases.sort((a, b) -> {
-            if (a.beat < b.beat)
-                return -1;
-            else if (a.beat > b.beat)
-                return 1;
-            return 0;
-        });
+		table[event.name][event.field].push(event);
+
+		sortEvents();
     }
     public function update(curBeat:Float)
     {
-		var newVals:Map<String, Map<Int, Float>> = [];
-
-		for (event in sets)
+		for (mod => fieldEvents in table)
 		{
-			event.update(curBeat);
-
-			if (event.fired)
+			for (events in fieldEvents)
 			{
-				if (newVals.get(event.mod) == null) newVals.set(event.mod, []);
-				newVals.get(event.mod).set(event.field, event.target);
+				for (ev in events)
+				{
+					ev.active = false;
 
-				sets.remove(event);
-				event = null;
-			}
-		}
-		
-		for (event in eases)
-		{
-			var newVal = newVals.get(event.mod)?.get(event.field) ?? null;
-			if (newVal != null) {
-				event.setStartValue(newVal);
-			}
+					if (ev.beat >= curBeat)
+						continue;
+					else
+						ev.active = true;
 
-			event.update(curBeat);
-
-			if (event.fired) {
-				eases.remove(event);
+					ev.update(curBeat);
+	
+					if (ev.fired)
+						events.remove(ev);
+				}
 			}
 		}
     }
-    private function sortEvents(events)
+	public function getLastEvent<T>(name:String, field:Int, evClass:T)
+	{
+		var list = table[name][field];
+		var idx = list.length;
+
+		while (idx >= 0)
+		{
+			final ev = list[idx];
+			
+			if (Std.isOfType(ev, evClass) && ev.field == field && ev.active)
+				return ev;
+
+			idx--;
+		}
+
+		return null;
+	}
+    private function sortEvents()
     {
-        events.sort((a, b) -> {
-            if (a.beat < b.beat)
-                return -1;
-            else if (a.beat > b.beat)
-                return 1;
-            return 0;
-        });
+		for (mod => modTab in table)
+		{
+			for (events in modTab)
+			{
+				events.sort((a, b) -> {
+					if (a.beat < b.beat)
+						return -1;
+					else if (a.beat > b.beat)
+						return 1;
+					return 0;
+				});
+			}
+		}
     }
 }

@@ -66,23 +66,23 @@ class Manager extends FlxBasic
     {
 		if (field == -1)
 		{
-			for (curField in 0...4)
+			for (curField in 0...2)
 				set(name, beat, value, curField);
 			return;
 		}
 
-        events.add(new SetEvent(name.toLowerCase(), beat, value, field));
+        events.add(new SetEvent(name.toLowerCase(), beat, value, field, events));
     }
     public function ease(name:String, beat:Float, length:Float, value:Float = 1, easeFunc:EaseFunction, field:Int = -1):Void
     {	
 		if (field == -1)
 		{
-			for (curField in 0...4)
+			for (curField in 0...2)
 				ease(name, beat, length, value, easeFunc, curField);
 			return;
 		}
 
-        events.add(new EaseEvent(name, beat, length, getPercent(name, field), value, easeFunc, field));
+        events.add(new EaseEvent(name, beat, length, value, easeFunc, field, events));
     }
 
     override function update(elapsed)
@@ -138,10 +138,9 @@ class Manager extends FlxBasic
 				if (!arrow.isSustainNote)
 					arrow.drawComplex(game.camHUD);
 				else {
-					var basePos = new Vector3D(
-						getReceptorX(arrow.strumID, arrow.strumLine.ID),
-						getReceptorY(arrow.strumID, arrow.strumLine.ID)
-					);
+					// TODO: clean this code AWWW my eyes
+					var basePos = new Vector3D(getReceptorX(arrow.strumID, arrow.strumLine.ID), getReceptorY(arrow.strumID, arrow.strumLine.ID));
+					
 					if (ModchartUtil.getDownscroll())
 						basePos.y = FlxG.height - basePos.y - HOLD_SIZE;
 
@@ -153,7 +152,7 @@ class Manager extends FlxBasic
 						ModchartUtil.getArrowDistance(arrow, Conductor.stepCrochet / Note.HOLD_SUBDIVS),
 						arrow
 					);
-					
+
 					var thisPos = basePos.add(scrollOffset);
 					var nextPos = basePos.add(nextScrollOffset);
 					

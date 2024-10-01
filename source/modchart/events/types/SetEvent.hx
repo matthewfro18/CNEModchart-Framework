@@ -6,16 +6,24 @@ class SetEvent extends Event
 {
     public var target:Float;
     public var mod:String;
-	public var field:Int;
 
-    public function new(mod:String, beat:Float, target:Float, field:Int = -1)
+    public function new(mod:String, beat:Float, target:Float, field:Int, parent:EventManager)
     {
-        this.mod = mod.toLowerCase();
+        this.mod = this.name = mod.toLowerCase();
         this.target = target;
 		this.field = field;
 
-        super(beat, () -> setModPercent(mod, target, field));
+        super(beat, () -> {
+			setModPercent(mod, target, field);
+
+			final prevEvent = parent.getLastEvent(this.mod, this.field, EaseEvent);
+			if (prevEvent != null)
+			{
+				if (prevEvent.beat != beat)
+					prevEvent.fired = true;
+				else
+					cast(prevEvent, EaseEvent).data.startValue = target;
+			}
+		}, parent);
     }
-	override public function getPriority()
-		return 1;
 }
