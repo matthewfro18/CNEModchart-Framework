@@ -31,3 +31,9 @@
 - [ ] Optimize and improve code (on progress)
 - [ ] Add note path (like not itg)
 - [ ] Standalone System (Using Macros & Plugin-based Classes)
+- [ ] Hold Graphic Subdivition System (theres already hold subdivs but are baad)
+
+## KNOWED BUGS
+- Hold offsets broke when zooming (Mini)
+- Kinda laggy holds (for me, lol)
+- Hold subdivition system broken (there are actual subdivitions, so more subdivitions = more health gain)

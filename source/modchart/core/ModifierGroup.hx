@@ -93,8 +93,15 @@ class ModifierGroup
 	public function renderMods(pos:Vector3D, data:NoteData):Vector3D
     {
 		// add the scroll
-		pos.y += data.hDiff * 0.45 * ModchartUtil.getScrollSpeed();
-
+		var scroll = new Vector3D(0, data.hDiff * 0.45 * ModchartUtil.getScrollSpeed());
+		scroll = ModchartUtil.rotate3DVector(
+			scroll,
+			getPercent('scrollAngleX', data.field),
+			getPercent('scrollAngleY', data.field),
+			getPercent('scrollAngleZ', data.field)
+		);
+		pos.add(scroll);
+		
 		for (name in sortedMods)
 		{
 			var mod = modifiers.get(name);

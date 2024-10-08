@@ -70,17 +70,17 @@ class ModchartUtil
 	}
 	public static function fastTan(ang:Float)
 		return FlxMath.fastSin(ang) / FlxMath.fastCos(ang);
-	
-	public static function getHoldVertex(top:Array<Vector3D>, bot:Array<Vector3D>, ?zoom:Float)
+	public static function getHoldVertex(top:Array<Vector3D>, bot:Array<Vector3D>)
 	{
-		var vertices = applyVertexZoom([
+		var vertices = [
 			top[0].x, top[0].y,
 			top[1].x, top[1].y,
 			bot[0].x, bot[0].y,
 			bot[1].x, bot[1].y
-		], zoom);
+		];
+		var vectorizedVerts = new DrawData(12, true, vertices);
 
-		return new DrawData(vertices.length, true, vertices);
+		return vectorizedVerts;
 	}
 	public static function getHoldUVT(arrow:Note)
 	{
@@ -146,24 +146,6 @@ class ModchartUtil
 		}
 
 		return vec;
-	}
-	public static function applyVertexZoom(vertices:Array<Float>, zoom:Float)
-	{
-		if(zoom != 1){
-			var currentVertexPosition:Int = 0;
-
-			var centerX = FlxG.width * 0.5;
-			var centerY = FlxG.height * 0.5;
-			while (currentVertexPosition < vertices.length)
-			{
-				vertices[currentVertexPosition] = (vertices[currentVertexPosition] - centerX) * zoom + centerX;
-				++currentVertexPosition;
-				vertices[currentVertexPosition] = (vertices[currentVertexPosition] - centerY) * zoom + centerY;
-				++currentVertexPosition;
-			}
-		}
-
-		return vertices;
 	}
 	public static function applyObjectZoom(obj:FlxSprite, zoom:Float)
 	{

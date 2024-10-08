@@ -25,6 +25,7 @@ import modchart.core.util.ModchartUtil;
 import modchart.core.ModifierGroup;
 import modchart.core.util.Constants.RenderParams;
 import modchart.core.util.Constants.NoteData;
+import modchart.core.util.Constants.Visuals;
 
 // @:build(modchart.core.macros.Macro.buildModifiers())
 class Manager extends FlxBasic
@@ -114,7 +115,7 @@ class Manager extends FlxBasic
 	 * Returns the points along the hold path at specific time
 	 * @param basePos The hold position per default
 	 */
-	public function getHoldQuads(basePos:Vector3D, params:NoteData, zoom:Float = 1):Array<Vector3D>
+	public function getHoldQuads(basePos:Vector3D, params:NoteData, visuals:Visuals):Array<Vector3D>
 	{
 		var quad = [new Vector3D((-HOLD_SIZEDIV2)), new Vector3D((HOLD_SIZEDIV2))];
 
@@ -133,7 +134,7 @@ class Manager extends FlxBasic
 		// im dumb
 		unit.setTo(unit.y, unit.x, 0);
 
-		var size = (quad[0].subtract(quad[1]).length / 2) * scale;
+		var size = (quad[0].subtract(quad[1]).length / 2) * visuals.scaleX * visuals.zoom;
 
 		var quadOffsets = [
 			new Vector3D(-unit.x * size, unit.y * size),
@@ -204,11 +205,11 @@ class Manager extends FlxBasic
 		var topVisuals = modifiers.getVisuals(curData);
 		var bottomVisuals = modifiers.getVisuals(nextData);
 
-		var topQuads = getHoldQuads(basePos, curData, topVisuals.zoom);
-		var bottomQuads = getHoldQuads(basePos, nextData, bottomVisuals.zoom);
+		var topQuads = getHoldQuads(basePos, curData, topVisuals);
+		var bottomQuads = getHoldQuads(basePos, nextData, bottomVisuals);
 		arrow.alpha = topVisuals.alpha * 0.6;
 
-		_vertices = ModchartUtil.getHoldVertex(topQuads, bottomQuads, zoom);
+		_vertices = ModchartUtil.getHoldVertex(topQuads, bottomQuads);
 		_uvtData = ModchartUtil.getHoldUVT(arrow);
 		
 		game.camHUD.drawTriangles(
@@ -266,7 +267,7 @@ class Manager extends FlxBasic
 		receptor.alpha = visuals.alpha;
 		receptor.angle = visuals.angle;
 
-		receptor.extra.set('z', receptorPos.z);
+		receptor.extra.set('z', receptorPos.z * 1000);
     }
 
     public function updateArrow(arrow:Note)
@@ -301,7 +302,7 @@ class Manager extends FlxBasic
 		arrow.alpha = visuals.alpha;
 		arrow.angle = visuals.angle;
 
-		arrow.extra.set('z', arrowPos.z);
+		arrow.extra.set('z', arrowPos.z * 1000);
     }
 
     private var receptorPos:Vector3D = new Vector3D();

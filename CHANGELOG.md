@@ -4,3 +4,6 @@
 - Fixed note positions
 - Improved some code
 - Fixed hold size (+= 6)
+
+## 8/10/21 (2)
+- Hold scale fix
