@@ -27,7 +27,7 @@ class Rotate extends Modifier
 	{
 		return new Vector3D(
 			50 + WIDTH / 2 * params.field + 2 * ARROW_SIZE,
-			((HEIGHT - ARROW_SIZE) * (HEIGHT / 720) * 0.5
+			(HEIGHT - ARROW_SIZEDIV2 * 0.5
 		));
 	}
 	public function getRotateName():String

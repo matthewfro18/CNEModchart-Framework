@@ -1,6 +1,7 @@
 package modchart.events.types;
 
 import flixel.math.FlxMath;
+import flixel.tweens.FlxEase;
 import flixel.tweens.FlxEase.EaseFunction;
 import modchart.events.Event;
 
@@ -31,7 +32,7 @@ class EaseEvent extends Event
             startBeat: beat,
             endBeat: beat + len,
             beatLength: len,
-            ease: ease
+            ease: ease ?? FlxEase.linear
         };
 
         super(beat, () -> {}, parent, true);
@@ -46,6 +47,8 @@ class EaseEvent extends Event
 			if (prevEvent != null && prevEvent != this)
 				prevEvent.fired = true;
 		}
+		if (data.ease == null)
+			data.ease = FlxEase.linear;
 
 		if (fired)
 			return;

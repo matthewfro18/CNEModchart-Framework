@@ -21,13 +21,13 @@
 - [X] Fix sustain size and offsets when rotating & scaling
 - [X] Fix modifier indexing
 - [ ] Scripted modifiers
-- [ ] Add patterns modifiers
+- [X] Add patterns modifiers
 - [X] Hability of modify more values on modifiers (alpha, color, angles, distances (speed), etc)
    - [X] Alpha
    - [X] Angle
    - [X] Scale
    - [ ] Color Transform
 - [ ] Multiple playfields support
-- [ ] Optimize and improve code
+- [ ] Optimize and improve code (on progress)
 - [ ] Add note path (like not itg)
 - [ ] Standalone System (Using Macros & Plugin-based Classes)

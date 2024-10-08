@@ -34,7 +34,9 @@ class ModifierGroup
         'centerrotate' => CenterRotate,
 		'confusion' => Confusion,
 		'stealth' => Stealth,
-		'scale' => Scale
+		'scale' => Scale,
+		// YOU NEVER STOOD A CHANCE
+		'infinite' => Infinite
     ];
 	private var MODIFIER_REGISTRERY:Map<String, Class<Modifier>> = GLOBAL_MODIFIERS;
 
@@ -90,6 +92,9 @@ class ModifierGroup
 	}
 	public function renderMods(pos:Vector3D, data:NoteData):Vector3D
     {
+		// add the scroll
+		pos.y += data.hDiff * 0.45 * ModchartUtil.getScrollSpeed();
+
 		for (name in sortedMods)
 		{
 			var mod = modifiers.get(name);

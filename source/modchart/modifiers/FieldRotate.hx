@@ -20,7 +20,7 @@ class FieldRotate extends Rotate
         }
 		x -= 56;
 
-		return new Vector3D(x, ((HEIGHT - ARROW_SIZE) * (HEIGHT / 720) * 0.5));
+		return new Vector3D(x, (HEIGHT - ARROW_SIZEDIV2) * 0.5);
 	}
 	override public function getRotateName():String
 		return 'fieldRotate';

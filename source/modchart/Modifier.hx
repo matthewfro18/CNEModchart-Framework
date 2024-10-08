@@ -43,14 +43,20 @@ class Modifier
     {
         Manager?.instance?.modifiers?.setPercent(name, value, cField ?? field);
     }
-	public function getPercent(name:String):Float
+	public function getPercent(name:String, ?cField:Int):Float
     {
-        return Manager?.instance?.modifiers?.getPercent(name, field);
+        return Manager?.instance?.modifiers?.getPercent(name, cField ?? field);
     }
     
 
 	private function getKeycount():Int
-		return return PlayState?.instance?.strumLines?.length ?? 4;
+	{
+		return (PlayState?.instance?.strumLines?.members[0]?.length) ?? 4;
+	}
+	private function getPlayercount():Int
+	{
+		return (PlayState?.instance?.strumLines?.length) ?? 2;
+	}
     // Helpers Functions
     private function getScrollSpeed():Float
         return PlayState?.instance?.scrollSpeed ?? 1;

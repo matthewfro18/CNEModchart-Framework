@@ -10,7 +10,7 @@ class CenterRotate extends Rotate
 {
 	override public function getOrigin(curPos:Vector3D, params:RenderParams):Vector3D
 	{
-		return new Vector3D(FlxG.width * 0.5, (HEIGHT - ARROW_SIZE) * (720 / HEIGHT) * 0.5);
+		return new Vector3D(FlxG.width * 0.5, HEIGHT - ARROW_SIZEDIV2 * 0.5);
 	}
 	override public function getRotateName():String
 		return 'centerRotate';

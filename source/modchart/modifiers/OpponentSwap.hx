@@ -9,7 +9,7 @@ class OpponentSwap extends Modifier
 {
     override public function render(curPos:Vector3D, params:RenderParams)
     {
-		var distX = WIDTH / getKeycount();
+		var distX = WIDTH / getPlayercount();
 		curPos.x -= distX * ModchartUtil.sign((params.field + 1) * 2 - 3) * getPercent('opponentSwap');
         return curPos;
     }

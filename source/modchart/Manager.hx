@@ -55,6 +55,10 @@ class Manager extends FlxBasic
 				strum.extra.set('lane', strumLine.members.indexOf(strum));
 			});
 		}
+		_indices = new DrawData<Int>(6, true, [
+			0, 1, 3,
+			0, 2, 3
+		]);
     }
 
 	public function registerModifier(name:String, mod:Class<Modifier>)   return modifiers.registerModifier(name, mod);
@@ -102,132 +106,136 @@ class Manager extends FlxBasic
         }
     }
     // Every 3 indices is a triangle
-    public static final INDICES:Array<Int> = [
-		0, 1, 2,
-		1, 3, 2,
-		2, 3, 4,
-		3, 5, 4
-    ];
-	var _indices = new DrawData<Int>(INDICES.length, true, INDICES);
+	var _indices = null;
 	var _uvtData = null;
 	var _vertices = null;
 
 	/**
-	 * Returns the points along the hold path in a specific time
+	 * Returns the points along the hold path at specific time
 	 * @param basePos The hold position per default
 	 */
-	public function getHoldQuad(basePos:Vector3D, params:NoteData, ?firstVec:Vector3D):Vector3D
+	public function getHoldQuads(basePos:Vector3D, params:NoteData, zoom:Float = 1):Array<Vector3D>
 	{
-		var leftPoint:Vector3D = firstVec ?? modifiers.getPath(basePos.clone(), params);
-		var rightPoint:Vector3D = modifiers.getPath(basePos.clone().add(new Vector3D(HOLD_SIZE)), params);
+		var quad = [new Vector3D((-HOLD_SIZEDIV2)), new Vector3D((HOLD_SIZEDIV2))];
 
-		return rightPoint.subtract(leftPoint);
+		var curPoint =  modifiers.getPath(basePos.clone(), params);
+		var scale:Float = curPoint.z != 0 ? (1 / curPoint.z) : 1;
+
+		params.hDiff += 1;
+		var nextPoint =  modifiers.getPath(basePos.clone(), params);
+		params.hDiff -= 1;
+
+		curPoint.z = nextPoint.z = 0;
+		
+		// normalized points difference (from 0-1)
+		var unit = nextPoint.subtract(curPoint);
+		unit.normalize();
+		// im dumb
+		unit.setTo(unit.y, unit.x, 0);
+
+		var size = (quad[0].subtract(quad[1]).length / 2) * scale;
+
+		var quadOffsets = [
+			new Vector3D(-unit.x * size, unit.y * size),
+			new Vector3D(unit.x * size, -unit.y * size)
+		];
+
+		return [
+			curPoint.add(quadOffsets[0]),
+			curPoint.add(quadOffsets[1]),
+			curPoint
+		];
 	}
+	var _point:FlxPoint = FlxPoint.get();
 	override function draw()
 	{
+		var drawCB = [];
         for (strumLine in game.strumLines)
 		{
 			strumLine.notes.visible = strumLine.visible = false;
 
 			strumLine.forEach(receptor -> {
 				@:privateAccess
-				receptor.drawComplex(game.camHUD);
+				drawCB.push({
+					callback: () -> {
+						receptor.drawComplex(game.camHUD);
+					},
+					z: receptor.extra.get('z') - 1
+				});
 			});
 			
 			strumLine.notes.forEachAlive(arrow -> @:privateAccess {
-				if (!arrow.isSustainNote)
-					arrow.drawComplex(game.camHUD);
-				else {
-					// TODO: clean this code AWWW my eyes
-					var basePos = new Vector3D(getReceptorX(arrow.strumID, arrow.strumLine.ID), getReceptorY(arrow.strumID, arrow.strumLine.ID));
-					
-					if (ModchartUtil.getDownscroll())
-						basePos.y = FlxG.height - basePos.y - HOLD_SIZE;
-
-					var scrollOffset = getScrollPos(
-						ModchartUtil.getArrowDistance(arrow, (ARROW_SIZE * ModchartUtil.getClippedRatio(arrow))),
-						arrow
-					);
-					var nextScrollOffset = getScrollPos(
-						ModchartUtil.getArrowDistance(arrow, Conductor.stepCrochet / Note.HOLD_SUBDIVS),
-						arrow
-					);
-
-					var thisPos = basePos.add(scrollOffset);
-					var nextPos = basePos.add(nextScrollOffset);
-					
-					// i hate wet coding but in idk why it not work on loops
-					thisPos = modifiers.getPath(thisPos, {
-						hDiff: arrow.strumTime - Conductor.songPosition,
-						receptor: arrow.strumID,
-						field: arrow.strumLine.ID,
-						arrow: true
+				if (!arrow.isSustainNote) {
+					drawCB.push({
+						callback: () -> {
+							arrow.drawComplex(game.camHUD);
+						},
+						z: arrow.extra.get('z') + 1
 					});
-
-					nextPos = modifiers.getPath(nextPos, {
-						hDiff: (arrow.strumTime + Conductor.stepCrochet / Note.HOLD_SUBDIVS) - Conductor.songPosition,
-						receptor: arrow.strumID,
-						field: arrow.strumLine.ID,
-						arrow: true
+				} else {
+					drawCB.push({
+						callback: () -> {
+							drawHoldArrow(arrow);
+						},
+						z: arrow.extra.get('z')
 					});
-
-					// i saved 2 calls to getPath
-					var topQuad = getHoldQuad(basePos.clone().add(scrollOffset), {
-						hDiff: arrow.strumTime - Conductor.songPosition,
-						receptor: arrow.strumID,
-						field: arrow.strumLine.ID,
-						arrow: true
-					}, thisPos);
-					var bottomQuad = getHoldQuad(basePos.clone().add(nextScrollOffset), {
-						hDiff: (arrow.strumTime + Conductor.stepCrochet / Note.HOLD_SUBDIVS) - Conductor.songPosition,
-						receptor: arrow.strumID,
-						field: arrow.strumLine.ID,
-						arrow: true
-					}, nextPos);
-
-					final thisVisuals = modifiers.getVisuals({
-						hDiff: arrow.strumTime - Conductor.songPosition,
-						receptor: arrow.strumID,
-						field: arrow.strumLine.ID,
-						arrow: true
-					});
-					final nextVisuals = modifiers.getVisuals({
-						hDiff: (arrow.strumTime + Conductor.stepCrochet / Note.HOLD_SUBDIVS) - Conductor.songPosition,
-						receptor: arrow.strumID,
-						field: arrow.strumLine.ID,
-						arrow: true
-					});
-					arrow.alpha = thisVisuals.alpha * 0.6;
-
-					// apply scale and zoom
-					topQuad.x *= thisVisuals.scaleX * thisVisuals.zoom;
-					topQuad.y *= thisVisuals.scaleY * thisVisuals.zoom;
-					bottomQuad.x *= nextVisuals.scaleX * nextVisuals.zoom;
-					bottomQuad.y *= nextVisuals.scaleY * nextVisuals.zoom;
-					thisPos = ModchartUtil.applyVectorZoom(thisPos, thisVisuals.zoom);
-					nextPos = ModchartUtil.applyVectorZoom(nextPos, nextVisuals.zoom);
-
-					thisPos = ModchartUtil.applyHoldOffset(thisPos, topQuad);
-					nextPos = ModchartUtil.applyHoldOffset(nextPos, bottomQuad);
-
-					_vertices = ModchartUtil.getHoldVertex(thisPos, nextPos, [topQuad, bottomQuad]);
-					_uvtData = ModchartUtil.getHoldIndices(arrow);
-					
-					game.camHUD.drawTriangles(
-						arrow.graphic,
-						_vertices,
-						_indices,
-						_uvtData,
-						null,
-						null,
-						null,
-						false,
-						arrow.antialiasing,
-						arrow.colorTransform
-					);
 				}
 			});
 		}
+		drawCB.sort((a, b) -> {
+			return Math.ceil(a.z - b.z);
+		});
+		for (item in drawCB) item.callback();
+	}
+	// for tap arrows or receptors
+	function drawTapArrow(arrow:FlxSprite)
+	{
+	}
+	function drawHoldArrow(arrow:Note)
+	{
+		var basePos = new Vector3D(
+			getReceptorX(arrow.strumID, arrow.strumLine.ID),
+			getReceptorY(arrow.strumID, arrow.strumLine.ID)
+		).add(ModchartUtil.getHalfPos());
+
+		var curData = getNoteData(arrow);
+		var nextData = getNoteData(arrow, Conductor.stepCrochet / Note.HOLD_SUBDIVS);
+
+		var topVisuals = modifiers.getVisuals(curData);
+		var bottomVisuals = modifiers.getVisuals(nextData);
+
+		var topQuads = getHoldQuads(basePos, curData, topVisuals.zoom);
+		var bottomQuads = getHoldQuads(basePos, nextData, bottomVisuals.zoom);
+		arrow.alpha = topVisuals.alpha * 0.6;
+
+		_vertices = ModchartUtil.getHoldVertex(topQuads, bottomQuads, zoom);
+		_uvtData = ModchartUtil.getHoldUVT(arrow);
+		
+		game.camHUD.drawTriangles(
+			arrow.graphic,
+			_vertices,
+			_indices,
+			_uvtData,
+			null,
+			null,
+			null,
+			false,
+			arrow.antialiasing,
+			arrow.colorTransform
+		);
+	}
+	function getNoteData(arrow:Note, posOff:Float = 0)
+	{
+		var pos = (arrow.strumTime - Conductor.songPosition) + posOff;
+
+		if (arrow.wasGoodHit && pos < 0)
+			pos = 0;
+		return {
+			hDiff: pos,
+			receptor: arrow.strumID,
+			field: arrow.strumLine.ID,
+			arrow: true
+		};
 	}
 
     public function updateReceptor(receptor:Strum)
@@ -244,9 +252,10 @@ class Manager extends FlxBasic
 		final visuals = modifiers.getVisuals(noteData);
 		
 		receptor.scale.set(0.7, 0.7);
-        receptor.setPosition(getReceptorX(lane, field), getReceptorY(lane, field));
+        receptor.setPosition(getReceptorX(lane, field) + ARROW_SIZEDIV2, getReceptorY(lane, field) + ARROW_SIZEDIV2);
         receptorPos.setTo(receptor.x, receptor.y, 0);
         receptorPos = modifiers.getPath(receptorPos, noteData);
+		receptorPos.decrementBy(ModchartUtil.getHalfPos());
 
 		receptor.scale.scale(1 / receptorPos.z);
         receptor.setPosition(receptorPos.x, receptorPos.y);
@@ -256,14 +265,13 @@ class Manager extends FlxBasic
 		receptor.scale.y *= visuals.scaleY;
 		receptor.alpha = visuals.alpha;
 		receptor.angle = visuals.angle;
+
+		receptor.extra.set('z', receptorPos.z);
     }
-	var smoothSustains:Bool = false;
 
     public function updateArrow(arrow:Note)
     {		
 		if (arrow.isSustainNote) return;
-
-		var scrollAddition = getScrollPos(ModchartUtil.getArrowDistance(arrow, 0, false), arrow);
 
         final diff = arrow.strumTime - Conductor.songPosition;
 		final noteData = {
@@ -275,14 +283,14 @@ class Manager extends FlxBasic
 		final visuals = modifiers.getVisuals(noteData);
 
 		arrow.scale.set(0.7, 0.7);
-        arrow.x = getReceptorX(arrow.strumID, arrow.strumLine.ID);
-        arrow.y = getReceptorY(arrow.strumID, arrow.strumLine.ID);
+        arrow.x = getReceptorX(arrow.strumID, arrow.strumLine.ID) + ARROW_SIZEDIV2;
+        arrow.y = getReceptorY(arrow.strumID, arrow.strumLine.ID) + ARROW_SIZEDIV2;
         arrow.angle = 0;
         arrow.strumRelativePos = false;
         arrowPos.setTo(arrow.x, arrow.y, 0);
-		arrowPos.incrementBy(scrollAddition);
 
         arrowPos = modifiers.getPath(arrowPos, noteData);
+		arrowPos.decrementBy(ModchartUtil.getHalfPos());
 
 		arrow.scale.scale(1 / arrowPos.z);
         arrow.setPosition(arrowPos.x, arrowPos.y);
@@ -292,17 +300,10 @@ class Manager extends FlxBasic
 		arrow.scale.y *= visuals.scaleY;
 		arrow.alpha = visuals.alpha;
 		arrow.angle = visuals.angle;
+
+		arrow.extra.set('z', arrowPos.z);
     }
 
-	public function getScrollPos(distance:Float, arrow:Note)
-	{
-		var scrollPos = new Vector3D(0, distance);
-		var angleX = modifiers.getPercent('scrollAngleX', arrow.strumLine.ID);
-		var angleY = modifiers.getPercent('scrollAngleY', arrow.strumLine.ID);
-		var angleZ = modifiers.getPercent('scrollAngleZ', arrow.strumLine.ID);
-
-		return ModchartUtil.rotate3DVector(scrollPos, angleX, angleY, angleZ);
-	}
     private var receptorPos:Vector3D = new Vector3D();
     private var arrowPos:Vector3D = new Vector3D();
     private var sustainPos:Vector3D = new Vector3D();
@@ -316,8 +317,9 @@ class Manager extends FlxBasic
         @:privateAccess
         return game.strumLines.members[field].startingPos.x + ((ARROW_SIZE) * lane);
 		
-    private var HOLD_SIZE:Float = 44 * 0.7;
-    private var HOLD_SIZEDIV2:Float = (44 * 0.7) * 0.5;
+	// for some reazon is 50 instead of 44 in cne
+    private var HOLD_SIZE:Float = 50 * 0.7;
+    private var HOLD_SIZEDIV2:Float = (50 * 0.7) * 0.5;
     private var ARROW_SIZE:Float = 160 * 0.7;
     private var ARROW_SIZEDIV2:Float = (160 * 0.7) * 0.5;
     private var PI:Float = Math.PI;

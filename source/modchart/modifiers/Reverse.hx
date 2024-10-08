@@ -14,7 +14,7 @@ class Reverse extends Modifier
 	{
         var kNum = getKeycount();
         var val:Float = 0;
-        if(dir>=kNum * 0.5)
+        if(dir>=Math.floor(kNum * 0.5))
             val += getPercent("split");
 
         if((dir%2)==1)
@@ -37,9 +37,9 @@ class Reverse extends Modifier
     }
     override public function render(curPos:Vector3D, params:RenderParams)
     {
-		var initialY = Manager.instance.getReceptorY(params.receptor, params.field);
+		var initialY = Manager.instance.getReceptorY(params.receptor, params.field) + ARROW_SIZEDIV2;
 		var reversePerc = getReverseValue(params.receptor, params.field);
-		var shift = FlxMath.lerp(initialY, HEIGHT - initialY - ARROW_SIZE, reversePerc);
+		var shift = FlxMath.lerp(initialY, HEIGHT - initialY, reversePerc);
 		
 		var centerPercent = getPercent('centered');		
 		shift = FlxMath.lerp(shift, (HEIGHT * 0.5) - ARROW_SIZEDIV2, centerPercent);
