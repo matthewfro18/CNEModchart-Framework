@@ -36,7 +36,9 @@ class ModifierGroup
 		'stealth' => Stealth,
 		'scale' => Scale,
 		// YOU NEVER STOOD A CHANCE
-		'infinite' => Infinite
+		'infinite' => Infinite,
+        'schmovindrunk' => SchmovinDrunk,
+        'schmovintipsy' => SchmovinTipsy
     ];
 	private var MODIFIER_REGISTRERY:Map<String, Class<Modifier>> = GLOBAL_MODIFIERS;
 
