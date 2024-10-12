@@ -18,3 +18,6 @@
 
 ## 12/10/24 (2)
 - Schmovin Drunk & Tipsy Math (false paradise recreation upcoming >:3)
+
+## 12/10/24 (3)
+- Fix broken hold spacing when bpm changes

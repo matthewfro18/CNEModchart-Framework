@@ -64,6 +64,8 @@ class Manager extends FlxBasic
     public var events:EventManager;
 	public var modifiers:ModifierGroup;
 
+	private var _crochet:Float;
+
     public function new(game:PlayState)
     {
         super();
@@ -87,6 +89,9 @@ class Manager extends FlxBasic
 		_indices = new DrawData<Int>(1, false, []);
 
 		HOLD_SUBDIVITIONS = DEFAULT_HOLD_SUBDIVITIONS;
+
+		// no bpm changes
+		_crochet = Conductor.stepCrochet;
     }
 
 	public function registerModifier(name:String, mod:Class<Modifier>)   return modifiers.registerModifier(name, mod);
@@ -225,7 +230,7 @@ class Manager extends FlxBasic
 
 		for (sub in 0...HOLD_SUBDIVITIONS)
 		{
-			var subCr = Conductor.stepCrochet / HOLD_SUBDIVITIONS;
+			var subCr = _crochet / HOLD_SUBDIVITIONS;
 			var subOff = subCr * sub;
 
 			var thisData = getNoteData(arrow, subOff);
