@@ -43,66 +43,55 @@ class ModchartUtil
 	// stolen & improved from schmovin (Camera3DTransforms)
 	public static function perspective(pos:Vector3D)
 	{
-		var outPos = pos;
-
 		var halfScreenOffset = new Vector3D(FlxG.width / 2, FlxG.height / 2);
-		outPos = outPos.subtract(halfScreenOffset);
+		pos.decrementBy(halfScreenOffset);
 
-		var fov = PI / 2;
-		var screenRatio = 1;
-		var near = 0;
-		var far = 1;
+		var worldZ = Math.min(pos.z - 1, 0); // bound to 1000 z
 
-		var perspectiveZ = outPos.z - 1;
-		if (perspectiveZ > 0)
-			perspectiveZ = 0; // To prevent coordinate overflow :/
+		var halfFovTan = 1 / fastTan(fov / 2);
 
-		var x = outPos.x / fastTan(fov / 2);
-		var y = outPos.y * screenRatio / fastTan(fov / 2);
+		var projectionScale = (near + far) / range;
+		var projectionOffset = 2 * near * far / range;
+		var projectionZ = projectionScale * worldZ + projectionOffset;
 
-		var a = (near + far) / (near - far);
-		var b = 2 * near * far / (near - far);
-		var z = a * perspectiveZ + b;
-
-		var result = new Vector3D(x / z, y / z, z, outPos.w).add(halfScreenOffset);
-
-		return result;
+		var projectedPos = new Vector3D(pos.x * halfFovTan, pos.y * halfFovTan, projectionZ * projectionZ);
+		projectedPos.scaleBy(1 / projectionZ);
+		projectedPos.incrementBy(halfScreenOffset);
+		return projectedPos;
 	}
 	public static function fastTan(ang:Float)
 		return FlxMath.fastSin(ang) / FlxMath.fastCos(ang);
-	public static function getHoldVertex(top:Array<Vector3D>, bot:Array<Vector3D>)
-	{
-		var vertices = [
-			top[0].x, top[0].y,
-			top[1].x, top[1].y,
-			bot[0].x, bot[0].y,
-			bot[1].x, bot[1].y
-		];
-		var vectorizedVerts = new DrawData(12, true, vertices);
 
-		return vectorizedVerts;
-	}
-	public static function getHoldUVT(arrow:Note)
+	public static function getHoldVertex(upper:Array<Vector3D>, lower:Array<Vector3D>)
 	{
+		return [
+			upper[0].x, upper[0].y,
+			upper[1].x, upper[1].y,
+			lower[0].x, lower[0].y,
+			lower[1].x, lower[1].y
+		];
+	}
+	public static function getHoldUVT(arrow:Note, subs:Int)
+	{
+		var uv = new DrawData<Float>(8 * subs, false, []);
+
 		var frameUV = arrow.frame.uv;
 		var frameHeight = frameUV.height - frameUV.y;
 
-		var uvSub = 1.0 / 1;
-		var uvOffset = uvSub * 0;
+		var subDivited = 1.0 / subs;
 
-		var upperV = frameUV.y + (uvSub + uvOffset) * frameHeight;
-		var lowerV = frameUV.y + uvOffset * frameHeight;
-		var uv = new DrawData(12, false, [
-			frameUV.x, 		lowerV,
-			frameUV.width,  lowerV,
-			frameUV.x,		upperV,
-			frameUV.width,	upperV
-		]);
+		for (curSub in 0...subs)
+		{
+			var uvOffset = subDivited * curSub;
+			var subIndex = curSub * 8;
+
+			uv[subIndex] = uv[subIndex + 4] = frameUV.x;
+			uv[subIndex + 2] = uv[subIndex + 6] = frameUV.width;
+			uv[subIndex + 1] = uv[subIndex + 3] = frameUV.y + uvOffset * frameHeight;
+			uv[subIndex + 5] = uv[subIndex + 7] = frameUV.y + (uvOffset + subDivited) * frameHeight;
+		}
+
 		return uv;
-	}
-	public static function getHoldIndices(arrow:Note)
-	{
-
 	}
 	// gonna keep this shits inline cus are basic funcions
 	public static inline function getHalfPos():Vector3D
@@ -146,18 +135,5 @@ class ModchartUtil
 		}
 
 		return vec;
-	}
-	public static function applyObjectZoom(obj:FlxSprite, zoom:Float)
-	{
-		if(zoom != 1){
-			var centerX = FlxG.width * 0.5;
-			var centerY = FlxG.height * 0.5;
-
-			obj.scale.scale(zoom);
-			obj.x = (obj.x - centerX) * zoom + centerX;
-			obj.y = (obj.y - centerY) * zoom + centerY;
-		}
-
-		return obj;
 	}
 }

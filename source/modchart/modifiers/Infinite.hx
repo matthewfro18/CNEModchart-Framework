@@ -29,7 +29,7 @@ class Infinite extends PathModifier
 				infPath[data].push(new Vector3D(WIDTH * .5 + (sin(rad)) * 600,
 					HEIGHT * .5 + (sin(rad) * cos(rad)) * 600, 0));
 			}
-			r += 15;
+			r += 10;
 		}
 		return infPath;
 	}

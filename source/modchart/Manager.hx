@@ -32,9 +32,36 @@ class Manager extends FlxBasic
 {
     public static var instance:Manager;
 
+	public static var DEFAULT_HOLD_SUBDIVITIONS:Int = 1;
+
+	public var HOLD_SUBDIVITIONS(default, set):Int;
+	
+	function set_HOLD_SUBDIVITIONS(divs:Int)
+	{
+		HOLD_SUBDIVITIONS = Std.int(Math.max(1, divs));
+
+		updateIndices();
+
+		return HOLD_SUBDIVITIONS;
+	}
+
+	public function updateIndices()
+	{
+		_indices.length = (HOLD_SUBDIVITIONS * 6);
+		for (sub in 0...HOLD_SUBDIVITIONS)
+		{
+			var vert = sub * 4;
+			var count = sub * 6;
+
+			_indices[count] = _indices[count + 3] = vert;
+			_indices[count + 2] = _indices[count + 5] = vert + 3;
+			_indices[count + 1] = vert + 1;
+			_indices[count + 4] = vert + 2;
+		}
+	}
+
     public var game:PlayState;
     public var events:EventManager;
-
 	public var modifiers:ModifierGroup;
 
     public function new(game:PlayState)
@@ -56,10 +83,10 @@ class Manager extends FlxBasic
 				strum.extra.set('lane', strumLine.members.indexOf(strum));
 			});
 		}
-		_indices = new DrawData<Int>(6, true, [
-			0, 1, 3,
-			0, 2, 3
-		]);
+		// 1 as defualt
+		_indices = new DrawData<Int>(1, false, []);
+
+		HOLD_SUBDIVITIONS = DEFAULT_HOLD_SUBDIVITIONS;
     }
 
 	public function registerModifier(name:String, mod:Class<Modifier>)   return modifiers.registerModifier(name, mod);
@@ -107,9 +134,9 @@ class Manager extends FlxBasic
         }
     }
     // Every 3 indices is a triangle
-	var _indices = null;
-	var _uvtData = null;
-	var _vertices = null;
+	var _indices:Null<DrawData<Int>> = null;
+	var _uvtData:Null<DrawData<Float>> = null;
+	var _vertices:Null<DrawData<Float>> = null;
 
 	/**
 	 * Returns the points along the hold path at specific time
@@ -117,53 +144,32 @@ class Manager extends FlxBasic
 	 */
 	public function getHoldQuads(basePos:Vector3D, params:NoteData, visuals:Visuals):Array<Vector3D>
 	{
-		var quad = [new Vector3D((-HOLD_SIZEDIV2)), new Vector3D((HOLD_SIZEDIV2))];
+		var curPoint = ModchartUtil.applyVectorZoom(modifiers.getPath(basePos.clone(), params), visuals.zoom);
+		var nextPoint = ModchartUtil.applyVectorZoom(modifiers.getPath(basePos.clone(), params, 1), visuals.zoom);
 
-		var curPoint =  modifiers.getPath(basePos.clone(), params);
-		var scale:Float = curPoint.z != 0 ? (1 / curPoint.z) : 1;
-
-		params.hDiff += 1;
-		var nextPoint =  modifiers.getPath(basePos.clone(), params);
-		params.hDiff -= 1;
-
+		var zScale:Float = curPoint.z != 0 ? (1 / curPoint.z) : 1;
 		curPoint.z = nextPoint.z = 0;
 		
 		// normalized points difference (from 0-1)
 		var unit = nextPoint.subtract(curPoint);
 		unit.normalize();
-		// im dumb
 		unit.setTo(unit.y, unit.x, 0);
 
-		var size = (quad[0].subtract(quad[1]).length / 2) * visuals.scaleX * visuals.zoom;
-
-		var quadOffsets = [
-			new Vector3D(-unit.x * size, unit.y * size),
-			new Vector3D(unit.x * size, -unit.y * size)
-		];
+		var size = (new Vector3D(-HOLD_SIZEDIV2).subtract(new Vector3D(HOLD_SIZEDIV2)).length / 2) * visuals.scaleX * zScale * visuals.zoom;
 
 		return [
-			curPoint.add(quadOffsets[0]),
-			curPoint.add(quadOffsets[1]),
+			curPoint.add(new Vector3D(-unit.x * size, unit.y * size)),
+			curPoint.add(new Vector3D(unit.x * size, -unit.y * size)),
 			curPoint
 		];
 	}
-	var _point:FlxPoint = FlxPoint.get();
 	override function draw()
 	{
+		// FIXME: Properlu z indexing
 		var drawCB = [];
         for (strumLine in game.strumLines)
 		{
 			strumLine.notes.visible = strumLine.visible = false;
-
-			strumLine.forEach(receptor -> {
-				@:privateAccess
-				drawCB.push({
-					callback: () -> {
-						receptor.drawComplex(game.camHUD);
-					},
-					z: receptor.extra.get('z') - 1
-				});
-			});
 			
 			strumLine.notes.forEachAlive(arrow -> @:privateAccess {
 				if (!arrow.isSustainNote) {
@@ -178,19 +184,30 @@ class Manager extends FlxBasic
 						callback: () -> {
 							drawHoldArrow(arrow);
 						},
-						z: arrow.extra.get('z')
+						z: arrow.extra.get('z') - 1
 					});
 				}
 			});
+
+			strumLine.forEach(receptor -> {
+				@:privateAccess
+				drawCB.push({
+					callback: () -> {
+						receptor.drawComplex(game.camHUD);
+					},
+					z: receptor.extra.get('z')
+				});
+			});
 		}
 		drawCB.sort((a, b) -> {
-			return Math.ceil(a.z - b.z);
+			return Math.ceil(b.z - a.z);
 		});
 		for (item in drawCB) item.callback();
 	}
 	// for tap arrows or receptors
 	function drawTapArrow(arrow:FlxSprite)
 	{
+		// TODO: Custom tap arrows/receptor drawing (vert modifiers)
 	}
 	function drawHoldArrow(arrow:Note)
 	{
@@ -199,18 +216,40 @@ class Manager extends FlxBasic
 			getReceptorY(arrow.strumID, arrow.strumLine.ID)
 		).add(ModchartUtil.getHalfPos());
 
-		var curData = getNoteData(arrow);
-		var nextData = getNoteData(arrow, Conductor.stepCrochet / Note.HOLD_SUBDIVS);
+		var vertTotal:Array<Float> = [];
 
-		var topVisuals = modifiers.getVisuals(curData);
-		var bottomVisuals = modifiers.getVisuals(nextData);
+		var lastVis:Visuals = null;
+		var lastQuad:Array<Vector3D> = null;
 
-		var topQuads = getHoldQuads(basePos, curData, topVisuals);
-		var bottomQuads = getHoldQuads(basePos, nextData, bottomVisuals);
-		arrow.alpha = topVisuals.alpha * 0.6;
+		var arrowAlpha:Float = -1;
 
-		_vertices = ModchartUtil.getHoldVertex(topQuads, bottomQuads);
-		_uvtData = ModchartUtil.getHoldUVT(arrow);
+		for (sub in 0...HOLD_SUBDIVITIONS)
+		{
+			var subCr = Conductor.stepCrochet / HOLD_SUBDIVITIONS;
+			var subOff = subCr * sub;
+
+			var thisData = getNoteData(arrow, subOff);
+			var nextData = getNoteData(arrow, subOff + subCr);
+	
+			var topVisuals = lastVis ?? modifiers.getVisuals(thisData);
+			var bottomVisuals = modifiers.getVisuals(nextData);
+
+			var topQuads = lastQuad ?? getHoldQuads(basePos, thisData, topVisuals);
+			var bottomQuads = getHoldQuads(basePos, nextData, bottomVisuals);
+
+			vertTotal = vertTotal.concat(ModchartUtil.getHoldVertex(topQuads, bottomQuads));
+
+			lastVis = bottomVisuals;
+			lastQuad = bottomQuads;
+
+			if (arrowAlpha == -1)
+				arrowAlpha = topVisuals.alpha;
+		}
+
+		arrow.alpha = arrowAlpha * 0.6;
+
+		_vertices = new DrawData(vertTotal.length, false, vertTotal);
+		_uvtData = ModchartUtil.getHoldUVT(arrow, HOLD_SUBDIVITIONS);
 		
 		game.camHUD.drawTriangles(
 			arrow.graphic,
@@ -229,6 +268,7 @@ class Manager extends FlxBasic
 	{
 		var pos = (arrow.strumTime - Conductor.songPosition) + posOff;
 
+		// clip rect
 		if (arrow.wasGoodHit && pos < 0)
 			pos = 0;
 		return {
@@ -255,19 +295,18 @@ class Manager extends FlxBasic
 		receptor.scale.set(0.7, 0.7);
         receptor.setPosition(getReceptorX(lane, field) + ARROW_SIZEDIV2, getReceptorY(lane, field) + ARROW_SIZEDIV2);
         receptorPos.setTo(receptor.x, receptor.y, 0);
-        receptorPos = modifiers.getPath(receptorPos, noteData);
+        receptorPos = ModchartUtil.applyVectorZoom(modifiers.getPath(receptorPos, noteData), visuals.zoom);
 		receptorPos.decrementBy(ModchartUtil.getHalfPos());
 
 		receptor.scale.scale(1 / receptorPos.z);
         receptor.setPosition(receptorPos.x, receptorPos.y);
 
-		ModchartUtil.applyObjectZoom(receptor, visuals.zoom);
-		receptor.scale.x *= visuals.scaleX;
-		receptor.scale.y *= visuals.scaleY;
+		receptor.scale.x *= visuals.scaleX * visuals.zoom;
+		receptor.scale.y *= visuals.scaleY * visuals.zoom;
 		receptor.alpha = visuals.alpha;
 		receptor.angle = visuals.angle;
 
-		receptor.extra.set('z', receptorPos.z * 1000);
+		receptor.extra.set('z', Math.floor(receptorPos.z * 1000));
     }
 
     public function updateArrow(arrow:Note)
@@ -290,24 +329,22 @@ class Manager extends FlxBasic
         arrow.strumRelativePos = false;
         arrowPos.setTo(arrow.x, arrow.y, 0);
 
-        arrowPos = modifiers.getPath(arrowPos, noteData);
+        arrowPos = ModchartUtil.applyVectorZoom(modifiers.getPath(arrowPos, noteData), visuals.zoom);
 		arrowPos.decrementBy(ModchartUtil.getHalfPos());
 
 		arrow.scale.scale(1 / arrowPos.z);
         arrow.setPosition(arrowPos.x, arrowPos.y);
 
-		ModchartUtil.applyObjectZoom(arrow, visuals.zoom);
-		arrow.scale.x *= visuals.scaleX;
-		arrow.scale.y *= visuals.scaleY;
+		arrow.scale.x *= visuals.scaleX * visuals.zoom;
+		arrow.scale.y *= visuals.scaleY * visuals.zoom;
 		arrow.alpha = visuals.alpha;
 		arrow.angle = visuals.angle;
 
-		arrow.extra.set('z', arrowPos.z * 1000);
+		arrow.extra.set('z', Math.floor(arrowPos.z * 1000));
     }
 
     private var receptorPos:Vector3D = new Vector3D();
     private var arrowPos:Vector3D = new Vector3D();
-    private var sustainPos:Vector3D = new Vector3D();
 
     // HELPERS
     private function getScrollSpeed():Float return game.scrollSpeed;
