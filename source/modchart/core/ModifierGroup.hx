@@ -7,6 +7,7 @@ import modchart.core.util.Constants.Visuals;
 import modchart.core.util.Constants.RenderParams;
 import modchart.core.util.Constants.NoteData;
 import modchart.modifiers.*;
+import modchart.modifiers.false_paradise.*;
 import funkin.backend.system.Conductor;
 import modchart.core.util.ModchartUtil;
 
@@ -27,7 +28,6 @@ class ModifierGroup
 		'accelerate' => Accelerate,
         'receptorscroll' => ReceptorScroll,
 		'sawtooth' => SawTooth,
-		'braidy' => Braidy,
 		'mini' => Mini,
         'rotate' => Rotate,
         'fieldrotate' => FieldRotate,
@@ -38,7 +38,13 @@ class ModifierGroup
 		// YOU NEVER STOOD A CHANCE
 		'infinite' => Infinite,
         'schmovindrunk' => SchmovinDrunk,
-        'schmovintipsy' => SchmovinTipsy
+        'schmovintipsy' => SchmovinTipsy,
+        'wiggle' => Wiggle,
+        'arrowshape' => ArrowShape,
+        'eyeshape' => EyeShape,
+        'spiral' => Spiral,
+        'counterclockwise' => CounterClockWise,
+        'vibrate' => Vibrate
     ];
 	private var MODIFIER_REGISTRERY:Map<String, Class<Modifier>> = GLOBAL_MODIFIERS;
 
@@ -65,12 +71,17 @@ class ModifierGroup
 			scaleY: 1.,
 			angle: 0.,
 			alpha: 1.,
-			zoom: 1.
+			zoom: 1.,
+			glow: 0.,
+			glowR: 0.,
+			glowG: 0.,
+			glowB: 0.
 		};
 
 		for (name in sortedMods)
 		{
 			var mod = modifiers.get(name);
+			mod.field = data.field;
 
 			if (!mod.shouldRun())
 				continue;
@@ -80,13 +91,13 @@ class ModifierGroup
                 perc: 0.0,
                 sPos: Conductor.songPosition,
                 fBeat: Conductor.curBeatFloat,
+				time: data.time,
                 hDiff: data.hDiff,
                 receptor: data.receptor,
                 field: data.field,
 				arrow: data.arrow
             }
 
-			mod.field = data.field;
 			visuals = mod.visuals(visuals, args);
 		}
 
@@ -107,6 +118,7 @@ class ModifierGroup
 		for (name in sortedMods)
 		{
 			var mod = modifiers.get(name);
+			mod.field = data.field;
 
 			if (!mod.shouldRun())
 				continue;
@@ -116,13 +128,13 @@ class ModifierGroup
                 perc: 0.0,
                 sPos: Conductor.songPosition,
                 fBeat: Conductor.curBeatFloat,
+				time: data.time + posDiff,
                 hDiff: data.hDiff + posDiff,
                 receptor: data.receptor,
                 field: data.field,
 				arrow: data.arrow
             }
 
-			mod.field = data.field;
 			pos = mod.render(pos, args);
 		}
 

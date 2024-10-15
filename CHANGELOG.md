@@ -21,3 +21,7 @@
 
 ## 12/10/24 (3)
 - Fix broken hold spacing when bpm changes
+
+# 15/10/24
+- Custom mods examples
+- Modchart Examples

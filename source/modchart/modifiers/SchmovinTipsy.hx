@@ -12,5 +12,5 @@ class SchmovinTipsy extends Modifier
         return curPos;
     }
 	override public function shouldRun():Bool
-		return getPercent('schmovinTipsy') != 0;
+		return true;
 }

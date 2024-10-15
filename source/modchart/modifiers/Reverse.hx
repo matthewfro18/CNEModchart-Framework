@@ -7,6 +7,7 @@ import modchart.core.util.Constants.NoteData;
 import openfl.geom.Vector3D;
 import flixel.FlxG;
 import flixel.math.FlxMath;
+import funkin.game.PlayState;
 
 class Reverse extends Modifier
 {
@@ -33,6 +34,8 @@ class Reverse extends Modifier
             if(val>1)val=2-val;
         }
 
+		if (PlayState.instance.downscroll)
+			val = 1 - val;
         return val;
     }
     override public function render(curPos:Vector3D, params:RenderParams)

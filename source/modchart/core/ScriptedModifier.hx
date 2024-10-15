@@ -4,13 +4,14 @@ import flixel.FlxG;
 import funkin.game.PlayState;
 import modchart.core.util.Constants.RenderParams;
 import modchart.core.util.Constants.NoteData;
+import modchart.core.util.Constants.Visuals;
 import openfl.geom.Vector3D;
 import flixel.math.FlxMath;
 
 class ScriptedModifier extends Modifier
 {
 	public var _render:(Vector3D, RenderParams) -> Vector3D = null;
-	public var _getAliases:() -> Array<String> = null;
+	public var _visuals:(Visuals, RenderParams) -> Visuals = null;
 
 	override public function render(a, b)
 	{
@@ -19,11 +20,13 @@ class ScriptedModifier extends Modifier
 
 		return a;
 	}
-	override public function getAliases()
+	override public function visuals(data:Visuals, params:RenderParams)
 	{
-		if (_getAliases != null) 
-			return _getAliases();
+		if (_visuals != null) 
+			return _visuals(data, params);
 
-		return [];
+		return data;
 	}
+	override public function shouldRun():Bool
+		return true;
 }

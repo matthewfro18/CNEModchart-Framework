@@ -9,6 +9,8 @@ typedef RenderParams = {
     perc:Float,
     // Song Position
     sPos:Float,
+	// Hit Time
+	time:Float,
     // Beat Float
     fBeat:Float,
     // Hit Time Difference
@@ -21,6 +23,8 @@ typedef RenderParams = {
 	arrow:Bool
 };
 typedef NoteData = {
+	// Hit Time
+	time:Float,
     // Hit Time Difference
     hDiff:Float,
     // Receptor ID
@@ -35,5 +39,9 @@ typedef Visuals = {
 	scaleY:Float,
 	alpha:Float,
 	angle:Float,
-	zoom:Float
+	zoom:Float,
+	glow:Float,
+	glowR:Float,
+	glowG:Float,
+	glowB:Float
 }

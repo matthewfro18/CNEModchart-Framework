@@ -1,5 +1,0 @@
-<!DOCTYPE codename-mod-options>
-<!-- HELLO!!! -->
-<menu name="LOBOTOMY" desc="FIRE IN THE HOLE!!">
-	<checkbox id="flashig" name="Flashing Lights In The Hole" desc="Uncheck this to disable flashing light events in Lobotomy." />
-</menu>

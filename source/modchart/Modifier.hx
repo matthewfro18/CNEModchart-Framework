@@ -48,6 +48,7 @@ class Modifier
         return Manager?.instance?.modifiers?.getPercent(name, cField ?? field);
     }
     
+	private var __SUSTAIN:Bool = false;
 
 	private function getKeycount():Int
 	{

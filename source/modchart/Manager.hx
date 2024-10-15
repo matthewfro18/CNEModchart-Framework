@@ -17,6 +17,7 @@ import flixel.tweens.FlxEase.EaseFunction;
 import flixel.graphics.tile.FlxDrawTrianglesItem.DrawData;
 
 import openfl.geom.Vector3D;
+import openfl.geom.ColorTransform;
 
 import modchart.modifiers.*;
 import modchart.events.*;
@@ -92,6 +93,9 @@ class Manager extends FlxBasic
 
 		// no bpm changes
 		_crochet = Conductor.stepCrochet;
+
+		// default
+		addModifier('reverse');
     }
 
 	public function registerModifier(name:String, mod:Class<Modifier>)   return modifiers.registerModifier(name, mod);
@@ -127,6 +131,9 @@ class Manager extends FlxBasic
         // Update Event Timeline
         events.update(Conductor.curBeatFloat);
 
+		var dw = PlayState.instance.downscroll;
+
+		PlayState.instance.downscroll = false;
         // Update Modifiers
         for (strumLine in game.strumLines)
         {
@@ -137,11 +144,13 @@ class Manager extends FlxBasic
                 updateReceptor(strum);
             });
         }
+		PlayState.instance.downscroll = dw;
     }
     // Every 3 indices is a triangle
 	var _indices:Null<DrawData<Int>> = null;
 	var _uvtData:Null<DrawData<Float>> = null;
 	var _vertices:Null<DrawData<Float>> = null;
+	var _colors:Null<DrawData<Int>> = new DrawData<Int>();
 
 	/**
 	 * Returns the points along the hold path at specific time
@@ -165,24 +174,32 @@ class Manager extends FlxBasic
 		return [
 			curPoint.add(new Vector3D(-unit.x * size, unit.y * size)),
 			curPoint.add(new Vector3D(unit.x * size, -unit.y * size)),
-			curPoint
+			curPoint.add(new Vector3D(0, 0,  1 + (1 - zScale) * 0.001))
 		];
 	}
 	override function draw()
 	{
-		// FIXME: Properlu z indexing
 		var drawCB = [];
         for (strumLine in game.strumLines)
 		{
 			strumLine.notes.visible = strumLine.visible = false;
 			
+			strumLine.forEach(receptor -> {
+				@:privateAccess
+				drawCB.push({
+					callback: () -> {
+						receptor.drawComplex(game.camHUD);
+					},
+					z: receptor.extra.get('z')
+				});
+			});
 			strumLine.notes.forEachAlive(arrow -> @:privateAccess {
 				if (!arrow.isSustainNote) {
 					drawCB.push({
 						callback: () -> {
 							arrow.drawComplex(game.camHUD);
 						},
-						z: arrow.extra.get('z') + 1
+						z: arrow.extra.get('z') - 2
 					});
 				} else {
 					drawCB.push({
@@ -193,20 +210,11 @@ class Manager extends FlxBasic
 					});
 				}
 			});
-
-			strumLine.forEach(receptor -> {
-				@:privateAccess
-				drawCB.push({
-					callback: () -> {
-						receptor.drawComplex(game.camHUD);
-					},
-					z: receptor.extra.get('z')
-				});
-			});
 		}
 		drawCB.sort((a, b) -> {
-			return Math.ceil(b.z - a.z);
+			return Math.floor(b.z - a.z);
 		});
+		
 		for (item in drawCB) item.callback();
 	}
 	// for tap arrows or receptors
@@ -226,7 +234,8 @@ class Manager extends FlxBasic
 		var lastVis:Visuals = null;
 		var lastQuad:Array<Vector3D> = null;
 
-		var arrowAlpha:Float = -1;
+		var arrowQuads:Array<Vector3D> = null;
+		var arrowVisuals:Visuals = null;
 
 		for (sub in 0...HOLD_SUBDIVITIONS)
 		{
@@ -247,11 +256,24 @@ class Manager extends FlxBasic
 			lastVis = bottomVisuals;
 			lastQuad = bottomQuads;
 
-			if (arrowAlpha == -1)
-				arrowAlpha = topVisuals.alpha;
+			if (arrowQuads == null) {
+				arrowQuads = topQuads;
+				arrowVisuals = topVisuals;
+			}
 		}
 
-		arrow.alpha = arrowAlpha * 0.6;
+		var colorTransf:ColorTransform = arrow.colorTransform ?? new ColorTransform();
+		colorTransf.redMultiplier = 1 - arrowVisuals.glow;
+		colorTransf.greenMultiplier = 1 - arrowVisuals.glow;
+		colorTransf.blueMultiplier = 1 - arrowVisuals.glow;
+		colorTransf.redOffset = arrowVisuals.glowR * arrowVisuals.glow * 255;
+		colorTransf.greenOffset = arrowVisuals.glowG * arrowVisuals.glow * 255;
+		colorTransf.blueOffset = arrowVisuals.glowB * arrowVisuals.glow * 255;
+		colorTransf.alphaMultiplier = arrowVisuals.alpha * 0.6;
+
+		Reflect.setProperty(arrow, 'colorTransform', colorTransf);
+
+		arrow.extra.set('z', arrowQuads[2].z * 1000);
 
 		_vertices = new DrawData(vertTotal.length, false, vertTotal);
 		_uvtData = ModchartUtil.getHoldUVT(arrow, HOLD_SUBDIVITIONS);
@@ -261,12 +283,12 @@ class Manager extends FlxBasic
 			_vertices,
 			_indices,
 			_uvtData,
-			null,
+			_colors,
 			null,
 			null,
 			false,
 			arrow.antialiasing,
-			arrow.colorTransform
+			colorTransf
 		);
 	}
 	function getNoteData(arrow:Note, posOff:Float = 0)
@@ -277,6 +299,7 @@ class Manager extends FlxBasic
 		if (arrow.wasGoodHit && pos < 0)
 			pos = 0;
 		return {
+			time: arrow.strumTime + posOff,
 			hDiff: pos,
 			receptor: arrow.strumID,
 			field: arrow.strumLine.ID,
@@ -290,6 +313,7 @@ class Manager extends FlxBasic
         final field = receptor.extra.get('field') ?? 0;
 
 		final noteData = {
+			time: 0.,
             hDiff: 0.,
             receptor: lane,
             field: field,
@@ -306,9 +330,18 @@ class Manager extends FlxBasic
 		receptor.scale.scale(1 / receptorPos.z);
         receptor.setPosition(receptorPos.x, receptorPos.y);
 
+		var colorTransf:ColorTransform = receptor.colorTransform ?? new ColorTransform();
+		colorTransf.redMultiplier = 1 - visuals.glow;
+		colorTransf.greenMultiplier = 1 - visuals.glow;
+		colorTransf.blueMultiplier = 1 - visuals.glow;
+		colorTransf.redOffset = visuals.glowR * visuals.glow * 255;
+		colorTransf.greenOffset = visuals.glowG * visuals.glow * 255;
+		colorTransf.blueOffset = visuals.glowB * visuals.glow * 255;
+		colorTransf.alphaMultiplier = visuals.alpha;
+		Reflect.setProperty(receptor, 'colorTransform', colorTransf);
+
 		receptor.scale.x *= visuals.scaleX * visuals.zoom;
 		receptor.scale.y *= visuals.scaleY * visuals.zoom;
-		receptor.alpha = visuals.alpha;
 		receptor.angle = visuals.angle;
 
 		receptor.extra.set('z', Math.floor(receptorPos.z * 1000));
@@ -316,14 +349,13 @@ class Manager extends FlxBasic
 
     public function updateArrow(arrow:Note)
     {		
-		if (arrow.isSustainNote) return;
-
         final diff = arrow.strumTime - Conductor.songPosition;
 		final noteData = {
+			time: arrow.strumTime,
             hDiff: diff,
             receptor: arrow.strumID,
             field: arrow.strumLine.ID,
-			arrow: false
+			arrow: true
         };
 		final visuals = modifiers.getVisuals(noteData);
 
@@ -340,6 +372,16 @@ class Manager extends FlxBasic
 		arrow.scale.scale(1 / arrowPos.z);
         arrow.setPosition(arrowPos.x, arrowPos.y);
 
+		var colorTransf:ColorTransform = arrow.colorTransform ?? new ColorTransform();
+		colorTransf.redMultiplier = 1 - visuals.glow;
+		colorTransf.greenMultiplier = 1 - visuals.glow;
+		colorTransf.blueMultiplier = 1 - visuals.glow;
+		colorTransf.redOffset = visuals.glowR * visuals.glow * 255;
+		colorTransf.greenOffset = visuals.glowG * visuals.glow * 255;
+		colorTransf.blueOffset = visuals.glowB * visuals.glow * 255;
+		colorTransf.alphaMultiplier = visuals.alpha;
+		Reflect.setProperty(arrow, 'colorTransform', colorTransf);
+		
 		arrow.scale.x *= visuals.scaleX * visuals.zoom;
 		arrow.scale.y *= visuals.scaleY * visuals.zoom;
 		arrow.alpha = visuals.alpha;

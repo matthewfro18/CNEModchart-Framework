@@ -14,5 +14,5 @@ class SchmovinDrunk extends Modifier
         return curPos;
     }
 	override public function shouldRun():Bool
-		return getPercent('schmovinDrunk') != 0;
+		return true;
 }
