@@ -25,3 +25,5 @@
 # 15/10/24
 - Custom mods examples
 - Modchart Examples
+- More stuff im forgeting
+- False paradise stuff... modchart still wip !! some modifiers are not working, dont play it yet
