@@ -68,8 +68,13 @@ class Modifier
 
     private var WIDTH:Float = FlxG.width;
     private var HEIGHT:Float = FlxG.height;
-    private var ARROW_SIZE:Float = 160 * 0.7;
-    private var ARROW_SIZEDIV2:Float = (160 * 0.7) * 0.5;
+    private var ARROW_SIZE(get, default):Float;
+    private var ARROW_SIZEDIV2(get, default):Float;
+	private function get_ARROW_SIZE():Float
+		return Manager.ARROW_SIZE;
+	private function get_ARROW_SIZEDIV2():Float
+		return Manager.ARROW_SIZEDIV2;
+
     private var PI:Float = Math.PI;
     private function sin(num:Float, pr:Bool = false)
         return pr ? Math.sin(num) : FlxMath.fastSin(num);

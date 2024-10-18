@@ -9,19 +9,27 @@ import funkin.game.Note;
 import funkin.game.PlayState;
 import funkin.backend.utils.CoolUtil;
 import funkin.backend.system.Conductor;
+import modchart.Manager;
 
+@:keep
 class ModchartUtil
 {
-    public static function rotate(x:Float, y:Float, angle:Float)
+    inline public static function rotate(x:Float, y:Float, angle:Float)
     {
+		if ((angle % 360) == 0)
+			return [x, y];
+		
         final sin = FlxMath.fastSin(angle);
         final cos = FlxMath.fastCos(angle);
 
         return [x * cos - y * sin, x * sin + y * cos];
     };
 	static final RAD = Math.PI / 180;
-    public static function rotate3DVector(vec:Vector3D, angleX:Float, angleY:Float, angleZ:Float)
+    inline public static function rotate3DVector(vec:Vector3D, angleX:Float, angleY:Float, angleZ:Float)
 	{
+		if ((angleX + angleY + angleZ) == 0)
+			return vec;
+
 		var rotateZ = rotate(vec.x, vec.y, angleZ * RAD);
 		var offZ = new Vector3D(rotateZ[0], rotateZ[1], vec.z);
 
@@ -96,7 +104,7 @@ class ModchartUtil
 	// gonna keep this shits inline cus are basic funcions
 	public static inline function getHalfPos():Vector3D
 	{
-		return new Vector3D(ARROW_SIZEDIV2, ARROW_SIZEDIV2, 0, 0);
+		return new Vector3D(Manager.ARROW_SIZEDIV2, Manager.ARROW_SIZEDIV2, 0, 0);
 	}
 	// dude wtf it works
 	public inline static function sign(x:Int)

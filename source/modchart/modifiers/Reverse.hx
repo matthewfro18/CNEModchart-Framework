@@ -9,6 +9,8 @@ import flixel.FlxG;
 import flixel.math.FlxMath;
 import funkin.game.PlayState;
 
+// Default modifier
+// Handles scroll speed, scroll angle and reverse modifiers
 class Reverse extends Modifier
 {
 	public function getReverseValue(dir:Int, player:Int)
@@ -46,10 +48,42 @@ class Reverse extends Modifier
 		
 		var centerPercent = getPercent('centered');		
 		shift = FlxMath.lerp(shift, (HEIGHT * 0.5) - ARROW_SIZEDIV2, centerPercent);
-		curPos.y = shift + FlxMath.lerp(params.hDiff, -params.hDiff, reversePerc);
+
+		var distance = params.hDiff * 0.45 * ModchartUtil.getScrollSpeed();
+		var scroll = new Vector3D(0, FlxMath.lerp(distance, -distance, reversePerc));
+		scroll = applyScrollMods(scroll, params);
+
+		curPos.x += scroll.x;
+		curPos.y = shift + scroll.y;
+		curPos.z += scroll.z;
 
 		return curPos;
     }
+	function applyScrollMods(scroll:Vector3D, params:RenderParams)
+	{
+		var angleX = 0.;
+		var angleY = 0.;
+		var angleZ = 0.;
+
+		// Speed
+		scroll.y = scroll.y * (1 + getPercent('scrollSpeed', params.field) + getPercent('scrollSpeed' + Std.string(params.receptor), params.field));
+
+		// Main
+		angleX += getPercent('scrollAngleX', params.field);
+		angleY += getPercent('scrollAngleY', params.field);
+		angleZ += getPercent('scrollAngleZ', params.field);
+
+		// Curved
+		final shift:Float = params.hDiff * 0.25 * (1 + getPercent('curvedScrollPeriod', params.field));
+
+		angleX += shift * getPercent('curvedScrollX', params.field);
+		angleY += shift * getPercent('curvedScrollY', params.field);
+		angleZ += shift * getPercent('curvedScrollZ', params.field);
+		
+		scroll = ModchartUtil.rotate3DVector(scroll, angleX, angleY, angleZ);
+
+		return scroll;
+	}
 	override public function shouldRun():Bool
 		return true;
 }

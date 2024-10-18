@@ -26,7 +26,7 @@ class Rotate extends Modifier
 	public function getOrigin(curPos:Vector3D, params:RenderParams):Vector3D
 	{
 		return new Vector3D(
-			50 + WIDTH / 2 * params.field + 2 * ARROW_SIZE,
+			40 + WIDTH / 2 * params.field + 2 * ARROW_SIZE + ARROW_SIZEDIV2,
 			HEIGHT * 0.5
 		);
 	}

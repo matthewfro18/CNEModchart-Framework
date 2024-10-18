@@ -10,6 +10,7 @@ import funkin.backend.system.Conductor;
 import flixel.FlxG;
 import flixel.FlxBasic;
 import flixel.FlxSprite;
+import flixel.FlxCamera;
 import flixel.math.FlxMath;
 import flixel.math.FlxPoint;
 import flixel.tweens.FlxEase;
@@ -94,8 +95,10 @@ class Manager extends FlxBasic
 		// no bpm changes
 		_crochet = Conductor.stepCrochet;
 
-		// default
+		// default mods
 		addModifier('reverse');
+		addModifier('stealth');
+		addModifier('confusion');
     }
 
 	public function registerModifier(name:String, mod:Class<Modifier>)   return modifiers.registerModifier(name, mod);
@@ -130,21 +133,6 @@ class Manager extends FlxBasic
     {
         // Update Event Timeline
         events.update(Conductor.curBeatFloat);
-
-		var dw = PlayState.instance.downscroll;
-
-		PlayState.instance.downscroll = false;
-        // Update Modifiers
-        for (strumLine in game.strumLines)
-        {
-			strumLine.notes.forEachAlive(note -> {
-                updateArrow(note);
-            });
-            strumLine.forEach(strum -> {
-                updateReceptor(strum);
-            });
-        }
-		PlayState.instance.downscroll = dw;
     }
     // Every 3 indices is a triangle
 	var _indices:Null<DrawData<Int>> = null;
@@ -188,16 +176,16 @@ class Manager extends FlxBasic
 				@:privateAccess
 				drawCB.push({
 					callback: () -> {
-						receptor.drawComplex(game.camHUD);
+						drawReceptor(receptor);
 					},
 					z: receptor.extra.get('z')
 				});
 			});
-			strumLine.notes.forEachAlive(arrow -> @:privateAccess {
+			strumLine.notes.forEach(arrow -> @:privateAccess {
 				if (!arrow.isSustainNote) {
 					drawCB.push({
 						callback: () -> {
-							arrow.drawComplex(game.camHUD);
+							drawTapArrow(arrow);
 						},
 						z: arrow.extra.get('z') - 2
 					});
@@ -217,98 +205,7 @@ class Manager extends FlxBasic
 		
 		for (item in drawCB) item.callback();
 	}
-	// for tap arrows or receptors
-	function drawTapArrow(arrow:FlxSprite)
-	{
-		// TODO: Custom tap arrows/receptor drawing (vert modifiers)
-	}
-	function drawHoldArrow(arrow:Note)
-	{
-		var basePos = new Vector3D(
-			getReceptorX(arrow.strumID, arrow.strumLine.ID),
-			getReceptorY(arrow.strumID, arrow.strumLine.ID)
-		).add(ModchartUtil.getHalfPos());
-
-		var vertTotal:Array<Float> = [];
-
-		var lastVis:Visuals = null;
-		var lastQuad:Array<Vector3D> = null;
-
-		var arrowQuads:Array<Vector3D> = null;
-		var arrowVisuals:Visuals = null;
-
-		for (sub in 0...HOLD_SUBDIVITIONS)
-		{
-			var subCr = _crochet / HOLD_SUBDIVITIONS;
-			var subOff = subCr * sub;
-
-			var thisData = getNoteData(arrow, subOff);
-			var nextData = getNoteData(arrow, subOff + subCr);
-	
-			var topVisuals = lastVis ?? modifiers.getVisuals(thisData);
-			var bottomVisuals = modifiers.getVisuals(nextData);
-
-			var topQuads = lastQuad ?? getHoldQuads(basePos, thisData, topVisuals);
-			var bottomQuads = getHoldQuads(basePos, nextData, bottomVisuals);
-
-			vertTotal = vertTotal.concat(ModchartUtil.getHoldVertex(topQuads, bottomQuads));
-
-			lastVis = bottomVisuals;
-			lastQuad = bottomQuads;
-
-			if (arrowQuads == null) {
-				arrowQuads = topQuads;
-				arrowVisuals = topVisuals;
-			}
-		}
-
-		var colorTransf:ColorTransform = arrow.colorTransform ?? new ColorTransform();
-		colorTransf.redMultiplier = 1 - arrowVisuals.glow;
-		colorTransf.greenMultiplier = 1 - arrowVisuals.glow;
-		colorTransf.blueMultiplier = 1 - arrowVisuals.glow;
-		colorTransf.redOffset = arrowVisuals.glowR * arrowVisuals.glow * 255;
-		colorTransf.greenOffset = arrowVisuals.glowG * arrowVisuals.glow * 255;
-		colorTransf.blueOffset = arrowVisuals.glowB * arrowVisuals.glow * 255;
-		colorTransf.alphaMultiplier = arrowVisuals.alpha * 0.6;
-
-		Reflect.setProperty(arrow, 'colorTransform', colorTransf);
-
-		arrow.extra.set('z', arrowQuads[2].z * 1000);
-
-		_vertices = new DrawData(vertTotal.length, false, vertTotal);
-		_uvtData = ModchartUtil.getHoldUVT(arrow, HOLD_SUBDIVITIONS);
-		
-		game.camHUD.drawTriangles(
-			arrow.graphic,
-			_vertices,
-			_indices,
-			_uvtData,
-			_colors,
-			null,
-			null,
-			false,
-			arrow.antialiasing,
-			colorTransf
-		);
-	}
-	function getNoteData(arrow:Note, posOff:Float = 0)
-	{
-		var pos = (arrow.strumTime - Conductor.songPosition) + posOff;
-
-		// clip rect
-		if (arrow.wasGoodHit && pos < 0)
-			pos = 0;
-		return {
-			time: arrow.strumTime + posOff,
-			hDiff: pos,
-			receptor: arrow.strumID,
-			field: arrow.strumLine.ID,
-			arrow: true
-		};
-	}
-
-    public function updateReceptor(receptor:Strum)
-    {
+	function drawReceptor(receptor:Strum) @:privateAccess {
         final lane = receptor.extra.get('lane') ?? 0;
         final field = receptor.extra.get('field') ?? 0;
 
@@ -321,7 +218,11 @@ class Manager extends FlxBasic
         };
 		final visuals = modifiers.getVisuals(noteData);
 		
-		receptor.scale.set(0.7, 0.7);
+		var lastScale = receptor.scale.clone();
+
+		ARROW_SIZE = receptor.width;
+		ARROW_SIZEDIV2 = receptor.width * .5;
+
         receptor.setPosition(getReceptorX(lane, field) + ARROW_SIZEDIV2, getReceptorY(lane, field) + ARROW_SIZEDIV2);
         receptorPos.setTo(receptor.x, receptor.y, 0);
         receptorPos = ModchartUtil.applyVectorZoom(modifiers.getPath(receptorPos, noteData), visuals.zoom);
@@ -345,11 +246,15 @@ class Manager extends FlxBasic
 		receptor.angle = visuals.angle;
 
 		receptor.extra.set('z', Math.floor(receptorPos.z * 1000));
-    }
 
-    public function updateArrow(arrow:Note)
-    {		
-        final diff = arrow.strumTime - Conductor.songPosition;
+		var cameras:Array<FlxCamera> = receptor._cameras ?? game.strumLines.members[field].cameras;
+		for (camera in cameras)
+			receptor.drawComplex(camera);
+
+		receptor.scale.copyFrom(lastScale);
+	}
+	function drawTapArrow(arrow:Note) @:privateAccess {
+		final diff = arrow.strumTime - Conductor.songPosition;
 		final noteData = {
 			time: arrow.strumTime,
             hDiff: diff,
@@ -359,7 +264,8 @@ class Manager extends FlxBasic
         };
 		final visuals = modifiers.getVisuals(noteData);
 
-		arrow.scale.set(0.7, 0.7);
+		var lastScale = arrow.scale.clone();
+
         arrow.x = getReceptorX(arrow.strumID, arrow.strumLine.ID) + ARROW_SIZEDIV2;
         arrow.y = getReceptorY(arrow.strumID, arrow.strumLine.ID) + ARROW_SIZEDIV2;
         arrow.angle = 0;
@@ -388,7 +294,99 @@ class Manager extends FlxBasic
 		arrow.angle = visuals.angle;
 
 		arrow.extra.set('z', Math.floor(arrowPos.z * 1000));
-    }
+
+		var cameras:Array<FlxCamera> = arrow._cameras ?? arrow.strumLine.cameras;
+		for (camera in cameras)
+			arrow.drawComplex(camera);
+
+		arrow.scale.copyFrom(lastScale);
+	}
+	function drawHoldArrow(arrow:Note) @:privateAccess {
+		var basePos = new Vector3D(
+			getReceptorX(arrow.strumID, arrow.strumLine.ID),
+			getReceptorY(arrow.strumID, arrow.strumLine.ID)
+		).add(ModchartUtil.getHalfPos());
+
+		var vertTotal:Array<Float> = [];
+
+		var lastVis:Visuals = null;
+		var lastQuad:Array<Vector3D> = null;
+
+		var arrowQuads:Array<Vector3D> = null;
+		var arrowVisuals:Visuals = null;
+
+		HOLD_SIZE = arrow.width;
+		HOLD_SIZEDIV2 = arrow.width * .5;
+
+		for (sub in 0...HOLD_SUBDIVITIONS)
+		{
+			var subCr = _crochet / HOLD_SUBDIVITIONS;
+			var subOff = subCr * sub;
+
+			var thisData = getNoteData(arrow, subOff);
+			var nextData = getNoteData(arrow, subOff + subCr);
+	
+			var topVisuals = lastVis ?? modifiers.getVisuals(thisData);
+			var bottomVisuals = modifiers.getVisuals(nextData);
+
+			var topQuads = lastQuad ?? getHoldQuads(basePos, thisData, topVisuals);
+			var bottomQuads = getHoldQuads(basePos, nextData, bottomVisuals);
+
+			vertTotal = vertTotal.concat(ModchartUtil.getHoldVertex(topQuads, bottomQuads));
+
+			lastVis = bottomVisuals;
+			lastQuad = bottomQuads;
+
+			if (arrowQuads == null) {
+				arrowQuads = topQuads;
+				arrowVisuals = topVisuals;
+			}
+		}
+
+		var colorTransf:ColorTransform = new ColorTransform();
+		colorTransf.redMultiplier = 1 - arrowVisuals.glow;
+		colorTransf.greenMultiplier = 1 - arrowVisuals.glow;
+		colorTransf.blueMultiplier = 1 - arrowVisuals.glow;
+		colorTransf.redOffset = arrowVisuals.glowR * arrowVisuals.glow * 255;
+		colorTransf.greenOffset = arrowVisuals.glowG * arrowVisuals.glow * 255;
+		colorTransf.blueOffset = arrowVisuals.glowB * arrowVisuals.glow * 255;
+		colorTransf.alphaMultiplier = arrowVisuals.alpha * 0.6;
+
+		arrow.extra.set('z', arrowQuads[2].z * 1000);
+
+		_vertices = new DrawData(vertTotal.length, false, vertTotal);
+		_uvtData = ModchartUtil.getHoldUVT(arrow, HOLD_SUBDIVITIONS);
+
+		var cameras:Array<FlxCamera> = arrow._cameras ?? arrow.strumLine.cameras;
+		for (camera in cameras)
+			camera.drawTriangles(
+				arrow.graphic,
+				_vertices,
+				_indices,
+				_uvtData,
+				_colors,
+				null,
+				null,
+				false,
+				arrow.antialiasing,
+				colorTransf
+			);
+	}
+	function getNoteData(arrow:Note, posOff:Float = 0)
+	{
+		var pos = (arrow.strumTime - Conductor.songPosition) + posOff;
+
+		// clip rect
+		if (arrow.wasGoodHit && pos < 0)
+			pos = 0;
+		return {
+			time: arrow.strumTime + posOff,
+			hDiff: pos,
+			receptor: arrow.strumID,
+			field: arrow.strumLine.ID,
+			arrow: true
+		};
+	}
 
     private var receptorPos:Vector3D = new Vector3D();
     private var arrowPos:Vector3D = new Vector3D();
@@ -403,9 +401,9 @@ class Manager extends FlxBasic
         return game.strumLines.members[field].startingPos.x + ((ARROW_SIZE) * lane);
 		
 	// for some reazon is 50 instead of 44 in cne
-    private var HOLD_SIZE:Float = 50 * 0.7;
-    private var HOLD_SIZEDIV2:Float = (50 * 0.7) * 0.5;
-    private var ARROW_SIZE:Float = 160 * 0.7;
-    private var ARROW_SIZEDIV2:Float = (160 * 0.7) * 0.5;
-    private var PI:Float = Math.PI;
+    public static var HOLD_SIZE:Float = 50 * 0.7;
+    public static var HOLD_SIZEDIV2:Float = (50 * 0.7) * 0.5;
+    public static var ARROW_SIZE:Float = 160 * 0.7;
+    public static var ARROW_SIZEDIV2:Float = (160 * 0.7) * 0.5;
+    public static var PI:Float = Math.PI;
 }
