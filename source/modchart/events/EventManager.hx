@@ -1,27 +1,30 @@
 package modchart.events;
 
+import modchart.core.util.ModchartUtil;
 import modchart.events.types.*;
+
+import haxe.ds.StringMap;
 
 class EventManager
 {
-	var table:Map<String, Array<Array<Event>>> = [];
+	private var table:StringMap<Array<Array<Event>>> = new StringMap();
 
     public function new() {};
 
     public function add(event:Event)
     {
-		if (table[event.name] == null)
-			table[event.name] = [[], []];
+		if (table.get(event.name) == null)
+			table.set(event.name, [[], []]);
 
-		table[event.name][event.field].push(event);
+		table.get(event.name)[event.field].push(event);
 
 		sortEvents();
     }
     public function update(curBeat:Float)
     {
-		for (mod => fieldEvents in table)
+		for (fieldTable in table.iterator())
 		{
-			for (events in fieldEvents)
+			for (events in fieldTable)
 			{
 				for (ev in events)
 				{
@@ -37,12 +40,12 @@ class EventManager
 					if (ev.fired)
 						events.remove(ev);
 				}
-			}
+			} 
 		}
     }
 	public function getLastEvent<T>(name:String, field:Int, evClass:T)
 	{
-		var list = table[name][field];
+		var list = table.get(name)[field];
 		var idx = list.length;
 
 		while (idx >= 0)
@@ -59,18 +62,14 @@ class EventManager
 	}
     private function sortEvents()
     {
-		for (mod => modTab in table)
-		{
-			for (events in modTab)
-			{
-				events.sort((a, b) -> {
-					if (a.beat < b.beat)
-						return -1;
-					else if (a.beat > b.beat)
-						return 1;
-					return 0;
-				});
+		for (modTab in table.iterator()) {
+			for (events in modTab) {
+				events.sort(__sortFunction);
 			}
 		}
     }
+	@:noCompletion
+	private final __sortFunction:(Event, Event) -> Int = (a, b) -> {
+		return Math.floor(a.beat - b.beat);
+	};
 }

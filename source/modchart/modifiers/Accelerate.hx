@@ -11,14 +11,14 @@ class Accelerate extends Modifier
 {
     override public function render(curPos:Vector3D, params:RenderParams)
     {
-		final scale = 720 * (1 + (getPercent('accelerateScale')));
+		final scale = 720 * (1 + (getPercent('accelerateScale', params.field)));
 		
 		var off = params.hDiff * 1.5 / ((params.hDiff + (scale) / 1.2) / scale);
-		curPos.y += ModchartUtil.clamp(getPercent('accelerate') * (off - params.hDiff), -600, 600);
+		curPos.y += ModchartUtil.clamp(getPercent('accelerate', params.field) * (off - params.hDiff), -600, 600);
 
         return curPos;
     }
 
-	override public function shouldRun():Bool
-		return getPercent('accelerate') != 0;
+	override public function shouldRun(params:RenderParams):Bool
+		return getPercent('accelerate', params.field) != 0;
 }

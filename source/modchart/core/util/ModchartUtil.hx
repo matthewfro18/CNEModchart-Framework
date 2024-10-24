@@ -24,53 +24,54 @@ class ModchartUtil
 
         return [x * cos - y * sin, x * sin + y * cos];
     };
-	static final RAD = Math.PI / 180;
     inline public static function rotate3DVector(vec:Vector3D, angleX:Float, angleY:Float, angleZ:Float)
 	{
+		final RAD = Math.PI / 180;
 		if ((angleX + angleY + angleZ) == 0)
 			return vec;
 
-		var rotateZ = rotate(vec.x, vec.y, angleZ * RAD);
-		var offZ = new Vector3D(rotateZ[0], rotateZ[1], vec.z);
+		final rotateZ = rotate(vec.x, vec.y, angleZ * RAD);
+		final offZ = new Vector3D(rotateZ[0], rotateZ[1], vec.z);
 
-		var rotateY = rotate(offZ.x, offZ.z, angleY * RAD);
-		var offY = new Vector3D(rotateY[0], offZ.y, rotateY[1]);
+		final rotateY = rotate(offZ.x, offZ.z, angleY * RAD);
+		final offY = new Vector3D(rotateY[0], offZ.y, rotateY[1]);
 
-		var rotateX = rotate(offY.z, offY.y, angleX * RAD);
-		var offX = new Vector3D(offY.x, rotateX[1], rotateX[0]);
+		final rotateX = rotate(offY.z, offY.y, angleX * RAD);
+		final offX = new Vector3D(offY.x, rotateX[1], rotateX[0]);
 
 		return offX;
 	}
 
-	static final __screenCenter = new Vector3D(FlxG.width / 2, FlxG.height / 2);
-	static var fov = Math.PI / 2;
-	static var near = 0;
-	static var far = 1;
-	static var range = near - far;
+	inline static final near = 0;
+	inline static final far = 1;
+	inline static final range = -1;
 
 	// stolen & improved from schmovin (Camera3DTransforms)
-	public static function perspective(pos:Vector3D)
+	inline static public function perspective(pos:Vector3D)
 	{
-		var halfScreenOffset = new Vector3D(FlxG.width / 2, FlxG.height / 2);
+		final fov = Math.PI / 2;
+		
+		final halfScreenOffset = new Vector3D(FlxG.width / 2, FlxG.height / 2);
 		pos.decrementBy(halfScreenOffset);
 
-		var worldZ = Math.min(pos.z - 1, 0); // bound to 1000 z
+		final worldZ = Math.min(pos.z - 1, 0); // bound to 1000 z
 
-		var halfFovTan = 1 / fastTan(fov / 2);
+		final halfFovTan = 1 / fastTan(fov / 2);
+		final rangeDivition = 1 / range;
 
-		var projectionScale = (near + far) / range;
-		var projectionOffset = 2 * near * far / range;
-		var projectionZ = projectionScale * worldZ + projectionOffset;
+		final projectionScale = (near + far) * rangeDivition;
+		final projectionOffset = 2 * near * (far * rangeDivition);
+		final projectionZ = projectionScale * worldZ + projectionOffset;
 
-		var projectedPos = new Vector3D(pos.x * halfFovTan, pos.y * halfFovTan, projectionZ * projectionZ);
+		final projectedPos = new Vector3D(pos.x * halfFovTan, pos.y * halfFovTan, projectionZ * projectionZ);
 		projectedPos.scaleBy(1 / projectionZ);
 		projectedPos.incrementBy(halfScreenOffset);
 		return projectedPos;
 	}
-	public static function fastTan(ang:Float)
+	inline static public function fastTan(ang:Float)
 		return FlxMath.fastSin(ang) / FlxMath.fastCos(ang);
 
-	public static function getHoldVertex(upper:Array<Vector3D>, lower:Array<Vector3D>)
+	inline static public function getHoldVertex(upper:Array<Vector3D>, lower:Array<Vector3D>)
 	{
 		return [
 			upper[0].x, upper[0].y,
@@ -79,7 +80,7 @@ class ModchartUtil
 			lower[1].x, lower[1].y
 		];
 	}
-	public static function getHoldUVT(arrow:Note, subs:Int)
+	inline static public function getHoldUVT(arrow:Note, subs:Int)
 	{
 		var uv = new DrawData<Float>(8 * subs, false, []);
 
@@ -119,12 +120,11 @@ class ModchartUtil
 	{
 		return PlayState?.instance?.scrollSpeed ?? 1;
 	}
-    public static var HOLD_SIZE:Float = 44 * 0.7;
-	public static var ARROW_SIZE:Float = 160 * 0.7;
-    public static var ARROW_SIZEDIV2:Float = (160 * 0.7) * 0.5;
-    public static var PI:Float = Math.PI;
+    inline public static var HOLD_SIZE:Float = 44 * 0.7;
+	inline public static var ARROW_SIZE:Float = 160 * 0.7;
+    inline public static var ARROW_SIZEDIV2:Float = (160 * 0.7) * 0.5;
 
-	public static function lerpVector3D(start:Vector3D, end:Vector3D, ratio:Float)
+	inline public static function lerpVector3D(start:Vector3D, end:Vector3D, ratio:Float)
 	{
 		final diff = end.subtract(start);
 		diff.scaleBy(ratio);
@@ -132,7 +132,7 @@ class ModchartUtil
 		return start.add(diff);
 	}
 
-	public static function applyVectorZoom(vec:Vector3D, zoom:Float)
+	inline public static function applyVectorZoom(vec:Vector3D, zoom:Float)
 	{
 		if(zoom != 1){
 			var centerX = FlxG.width * 0.5;

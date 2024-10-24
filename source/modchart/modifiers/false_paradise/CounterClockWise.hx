@@ -18,8 +18,8 @@ class CounterClockWise extends Modifier
 		var outX = centerX + cos(strumTime / Conductor.stepCrochet * PI) * radius;
 		var outY = centerY + sin(strumTime / Conductor.stepCrochet * PI) * radius;
 
-		return ModchartUtil.lerpVector3D(curPos, new Vector3D(outX, outY, 0, 0), getPercent('counterClockWise'));
+		return ModchartUtil.lerpVector3D(curPos, new Vector3D(outX, outY, 0, 0), getPercent('counterClockWise', params.field));
     }
-	override public function shouldRun():Bool
-		return getPercent('counterclockwise') != 0;
+	override public function shouldRun(params:RenderParams):Bool
+		return getPercent('counterclockwise', params.field) != 0;
 }

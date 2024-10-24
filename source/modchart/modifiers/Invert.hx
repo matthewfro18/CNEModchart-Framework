@@ -13,13 +13,13 @@ class Invert extends Modifier
 		final sine = sin(params.hDiff * PI * (1 / 222));
 
 		curPos.x += ARROW_SIZE * (
-			invert * getPercent('invert') + invert * (getPercent('invertSine') * sine) + 
-			flip * getPercent('flip') + flip * (getPercent('flipSine') * sine)
+			invert * getPercent('invert', params.field) + invert * (getPercent('invertSine', params.field) * sine) + 
+			flip * getPercent('flip', params.field) + flip * (getPercent('flipSine', params.field) * sine)
 		);
 
         return curPos;
     }
 
-	override public function shouldRun():Bool
+	override public function shouldRun(params:RenderParams):Bool
 		return true;
 }

@@ -9,10 +9,10 @@ class SchmovinDrunk extends Modifier
     override public function render(curPos:Vector3D, params:RenderParams)
     {
 		var phaseShift = params.receptor * 0.5 + params.hDiff / 222 * PI;
-        curPos.x += sin(params.fBeat / 4 * PI + phaseShift) * ARROW_SIZEDIV2 * getPercent('schmovinDrunk');
+        curPos.x += sin(params.fBeat / 4 * PI + phaseShift) * ARROW_SIZEDIV2 * getPercent('schmovinDrunk', params.field);
 
         return curPos;
     }
-	override public function shouldRun():Bool
+	override public function shouldRun(params:RenderParams):Bool
 		return true;
 }

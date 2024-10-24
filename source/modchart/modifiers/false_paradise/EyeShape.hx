@@ -71,7 +71,7 @@ class EyeShape extends Modifier
 		if (_path == null)
 			_path = LoadPath();
 
-		final perc = getPercent('eyeShape');
+		final perc = getPercent('eyeShape', params.field);
 
 		if (perc == 0)
 			return curPos;
@@ -83,6 +83,6 @@ class EyeShape extends Modifier
 			perc
 		);
     }
-	override public function shouldRun():Bool
+	override public function shouldRun(params:RenderParams):Bool
 		return true;
 }

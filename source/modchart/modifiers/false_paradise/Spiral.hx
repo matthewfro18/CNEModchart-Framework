@@ -13,12 +13,12 @@ class Spiral extends Modifier
 		var centerX = WIDTH * .5;
 		var centerY = HEIGHT * .5;
 		var radiusOffset = -params.hDiff * .25;
-		var radius = radiusOffset + getPercent('spiralDist') * params.receptor;
+		var radius = radiusOffset + getPercent('spiralDist', params.field) * params.receptor;
 		var outX = centerX + cos(-params.hDiff / Conductor.crochet * PI + params.fBeat * (PI * .25)) * radius;
 		var outY = centerY + sin(-params.hDiff / Conductor.crochet * PI - params.fBeat * (PI * .25)) * radius;
 
-		return ModchartUtil.lerpVector3D(curPos, new Vector3D(outX, outY, radius / (centerY * 4) - 1, 0), getPercent('spiral'));
+		return ModchartUtil.lerpVector3D(curPos, new Vector3D(outX, outY, radius / (centerY * 4) - 1, 0), getPercent('spiral', params.field));
     }
-	override public function shouldRun():Bool
-		return getPercent('spiral') != 0;
+	override public function shouldRun(params:RenderParams):Bool
+		return getPercent('spiral', params.field) != 0;
 }

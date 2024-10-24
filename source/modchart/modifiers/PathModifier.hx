@@ -109,6 +109,6 @@ class PathModifier extends Modifier
 		return outPos;
 	}
 
-	override public function shouldRun():Bool
+	override public function shouldRun(params:RenderParams):Bool
 		return getPercent(getPathName()) != 0;
 }

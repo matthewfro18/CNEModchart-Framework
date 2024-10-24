@@ -27,6 +27,6 @@ class ScriptedModifier extends Modifier
 
 		return data;
 	}
-	override public function shouldRun():Bool
+	override public function shouldRun(params:RenderParams):Bool
 		return true;
 }

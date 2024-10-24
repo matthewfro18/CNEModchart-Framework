@@ -11,6 +11,9 @@ import modchart.modifiers.false_paradise.*;
 import funkin.backend.system.Conductor;
 import modchart.core.util.ModchartUtil;
 
+import haxe.ds.StringMap;
+import haxe.ds.IntMap;
+
 class ModifierGroup
 {
 	public static var GLOBAL_MODIFIERS:Map<String, Class<Modifier>> = [
@@ -44,16 +47,15 @@ class ModifierGroup
         'eyeshape' => EyeShape,
         'spiral' => Spiral,
         'counterclockwise' => CounterClockWise,
-        'vibrate' => Vibrate
+        'vibrate' => Vibrate,
+        'bounce' => Bounce
     ];
 	private var MODIFIER_REGISTRERY:Map<String, Class<Modifier>> = GLOBAL_MODIFIERS;
 
-	public var percents:Map<String, Map<Int, Float>> = [];
-    public var modifiers:Map<String, Modifier> = [];
+	private var percents:StringMap<IntMap<Float>> = new StringMap();
+    private var modifiers:StringMap<Modifier> = new StringMap();
 
-	// apparently the maps dont care in what order you declare the values, they order them as they want
-	// i hate maps
-	public var sortedMods:Array<String> = [];
+	private var sortedMods:List<String> = new List<String>();
 
 	public function new() {}
 
@@ -67,7 +69,7 @@ class ModifierGroup
 	}
 	public function getVisuals(data:NoteData):Visuals
 	{
-		var visuals = {
+		var visuals:Visuals = {
 			scaleX: 1.,
 			scaleY: 1.,
 			angle: 0.,
@@ -79,15 +81,13 @@ class ModifierGroup
 			glowB: 0.
 		};
 
-		for (name in sortedMods)
-		{
-			var mod = modifiers.get(name);
+		final iterator = sortedMods.iterator();
+
+		do {
+			final mod = modifiers.get(iterator.next());
 			mod.field = data.field;
 
-			if (!mod.shouldRun())
-				continue;
-
-			var args = {
+			final args:RenderParams = {
 				// fuck u haxe
                 perc: 0.0,
                 sPos: Conductor.songPosition,
@@ -98,23 +98,23 @@ class ModifierGroup
                 field: data.field,
 				arrow: data.arrow
             }
+			if (!mod.shouldRun(args))
+				continue;
 
 			visuals = mod.visuals(visuals, args);
-		}
+		} while (iterator.hasNext());
 
 		return visuals;
 	}
 	public function renderMods(pos:Vector3D, data:NoteData, ?posDiff:Float = 0):Vector3D
     {
-		for (name in sortedMods)
-		{
-			var mod = modifiers.get(name);
+		final iterator = sortedMods.iterator();
+
+		do {
+			final mod = modifiers.get(iterator.next());
 			mod.field = data.field;
 
-			if (!mod.shouldRun())
-				continue;
-
-			var args = {
+			final args:RenderParams = {
 				// fuck u haxe
                 perc: 0.0,
                 sPos: Conductor.songPosition,
@@ -126,8 +126,11 @@ class ModifierGroup
 				arrow: data.arrow
             }
 
+			if (!mod.shouldRun(args))
+				continue;
+
 			pos = mod.render(pos, args);
-		}
+		} while (iterator.hasNext());
 
         return pos;
     }
@@ -151,12 +154,12 @@ class ModifierGroup
 
 		var newModifier = Type.createInstance(modifierClass, []);
 		modifiers.set(name.toLowerCase(), newModifier);
-		sortedMods.push(name.toLowerCase());
+		sortedMods.add(name.toLowerCase());
 	}
 
 	public function setPercent(name:String, value:Float, field:Int = -1)
 	{
-		final percs = percents.get(name.toLowerCase()) ?? [0 => 0, 1 => 0];
+		final percs = percents.get(name.toLowerCase()) ?? getDefaultPerc();
 
 		if (field == -1)
 			for (k => _ in percs) percs.set(k, value);
@@ -167,4 +170,12 @@ class ModifierGroup
 	}
 	public function getPercent(name:String, field:Int):Float
 		return percents.get(name.toLowerCase())?.get(field) ?? 0;
+
+	private function getDefaultPerc():IntMap<Float>
+	{
+		final percmap = new IntMap<Float>();
+		percmap.set(0, 0.);
+		percmap.set(1, 0.);
+		return percmap;
+	}
 }

@@ -18,10 +18,10 @@ class Square extends Modifier
 		final period = getPercent("squarePeriod");
 		final amp = (PI * (params.hDiff + offset) / (ARROW_SIZE + (period * ARROW_SIZE)));
 
-		curPos.x += getPercent('square') * square(amp);
+		curPos.x += getPercent('square', params.field) * square(amp);
 
         return curPos;
     }
-	override public function shouldRun():Bool
-		return getPercent('square') != 0;
+	override public function shouldRun(params:RenderParams):Bool
+		return getPercent('square', params.field) != 0;
 }

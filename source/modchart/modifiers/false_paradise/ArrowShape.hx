@@ -70,7 +70,7 @@ class ArrowShape extends Modifier
 		if (_path == null)
 			_path = LoadPath();
 
-		final perc = getPercent('arrowShape');
+		final perc = getPercent('arrowShape', params.field);
 
 		if (perc == 0)
 			return curPos;
@@ -78,9 +78,9 @@ class ArrowShape extends Modifier
 		var path = GetPointAlongPath(params.hDiff / 1500.0 * _pathDistance);
 
 		return ModchartUtil.lerpVector3D(curPos,
-			path.add(new Vector3D(WIDTH * .5, HEIGHT * .5 + 280, params.receptor * getPercent('arrowShapeoffset') + curPos.z)),
+			path.add(new Vector3D(WIDTH * .5, HEIGHT * .5 + 280, params.receptor * getPercent('arrowShapeoffset', params.field) + curPos.z)),
 			perc);
     }
-	override public function shouldRun():Bool
+	override public function shouldRun(params:RenderParams):Bool
 		return true;
 }

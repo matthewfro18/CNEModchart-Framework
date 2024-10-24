@@ -26,7 +26,7 @@ class Modifier
     {
         return curPos;
     }
-	public function visuals(data:Visuals, params:RenderParams)
+	public function visuals(data:Visuals, params:RenderParams):Visuals
 	{
 		return data;
 	}
@@ -36,7 +36,7 @@ class Modifier
 	}
     public function getAliases():Array<String>
         return [];
-	public function shouldRun():Bool
+	public function shouldRun(params:RenderParams):Bool
 		return false;
 
     public function setPercent(name:String, value:Float, ?cField:Int)

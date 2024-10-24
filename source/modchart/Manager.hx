@@ -200,7 +200,7 @@ class Manager extends FlxBasic
 			});
 		}
 		drawCB.sort((a, b) -> {
-			return Math.floor(b.z - a.z);
+			return Math.round(b.z - a.z);
 		});
 		
 		for (item in drawCB) item.callback();
@@ -209,14 +209,14 @@ class Manager extends FlxBasic
         final lane = receptor.extra.get('lane') ?? 0;
         final field = receptor.extra.get('field') ?? 0;
 
-		final noteData = {
+		final noteData:NoteData = {
 			time: 0.,
             hDiff: 0.,
             receptor: lane,
             field: field,
 			arrow: false
         };
-		final visuals = modifiers.getVisuals(noteData);
+		final visuals:Visuals = modifiers.getVisuals(noteData);
 		
 		var lastScale = receptor.scale.clone();
 
@@ -252,10 +252,12 @@ class Manager extends FlxBasic
 			receptor.drawComplex(camera);
 
 		receptor.scale.copyFrom(lastScale);
+
+		lastScale.put();
 	}
 	function drawTapArrow(arrow:Note) @:privateAccess {
 		final diff = arrow.strumTime - Conductor.songPosition;
-		final noteData = {
+		final noteData:NoteData = {
 			time: arrow.strumTime,
             hDiff: diff,
             receptor: arrow.strumID,
@@ -300,6 +302,8 @@ class Manager extends FlxBasic
 			arrow.drawComplex(camera);
 
 		arrow.scale.copyFrom(lastScale);
+
+		lastScale.put();
 	}
 	function drawHoldArrow(arrow:Note) @:privateAccess {
 		var basePos = new Vector3D(
@@ -372,7 +376,7 @@ class Manager extends FlxBasic
 				colorTransf
 			);
 	}
-	function getNoteData(arrow:Note, posOff:Float = 0)
+	function getNoteData(arrow:Note, posOff:Float = 0):NoteData
 	{
 		var pos = (arrow.strumTime - Conductor.songPosition) + posOff;
 

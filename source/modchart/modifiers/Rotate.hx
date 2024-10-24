@@ -35,6 +35,6 @@ class Rotate extends Modifier
 	
 	override public function getAliases():Array<String>
 		return ['rotateX', 'rotateY', 'rotateZ'];
-	override public function shouldRun():Bool
+	override public function shouldRun(params:RenderParams):Bool
 		return true;
 }

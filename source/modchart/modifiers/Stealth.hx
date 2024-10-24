@@ -13,12 +13,12 @@ class Stealth extends Modifier
 {
 	public static var fadeDistY = 65;
 
-	public function getSuddenEnd(){
-		return (FlxG.height* 0.5) + fadeDistY * FlxMath.remapToRange(getPercent('sudden'),0,1,1,1.25) + (FlxG.height* 0.5) * getPercent("suddenOffset");
+	public function getSuddenEnd(params){
+		return (FlxG.height* 0.5) + fadeDistY * FlxMath.remapToRange(getPercent('sudden', params.field),0,1,1,1.25) + (FlxG.height* 0.5) * getPercent("suddenOffset", params.field);
 	}
 
-	public function getSuddenStart(){
-		return (FlxG.height* 0.5) + fadeDistY * FlxMath.remapToRange(getPercent('sudden'),0,1,0,0.25) + (FlxG.height* 0.5) * getPercent("suddenOffset");
+	public function getSuddenStart(params){
+		return (FlxG.height* 0.5) + fadeDistY * FlxMath.remapToRange(getPercent('sudden', params.field),0,1,0,0.25) + (FlxG.height* 0.5) * getPercent("suddenOffset", params.field);
 	}
 	public function new()
 	{
@@ -28,18 +28,18 @@ class Stealth extends Modifier
 	}
 	override public function visuals(data:Visuals, params:RenderParams)
 	{
-		var suddenAlpha = ModchartUtil.clamp(FlxMath.remapToRange(params.hDiff, getSuddenStart(), getSuddenEnd(), 0, -1), -1, 0);
+		var suddenAlpha = ModchartUtil.clamp(FlxMath.remapToRange(params.hDiff, getSuddenStart(params), getSuddenEnd(params), 0, -1), -1, 0);
 		
-		data.alpha = getPercent('alpha') + getPercent('alphaOffset');
+		data.alpha = getPercent('alpha', params.field) + getPercent('alphaOffset', params.field);
 
 		// sudden
-		var sudden = getPercent('sudden');
+		var sudden = getPercent('sudden', params.field);
 		data.alpha += suddenAlpha * sudden;
-		data.glow -= getPercent('flash') + (-suddenAlpha * 2) * sudden;
+		data.glow -= getPercent('flash', params.field) + (-suddenAlpha * 2) * sudden;
 
 		return data;
 	}
 
-	override public function shouldRun():Bool
+	override public function shouldRun(params:RenderParams):Bool
 		return true;
 }

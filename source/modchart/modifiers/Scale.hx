@@ -17,7 +17,7 @@ class Scale extends Modifier
 	}
 	override public function visuals(data:Visuals, params:RenderParams)
 	{
-		final scaleForce = getPercent('scaleForce');
+		final scaleForce = getPercent('scaleForce', params.field);
 
 		if (scaleForce != 0)
 		{
@@ -27,19 +27,19 @@ class Scale extends Modifier
 		}
 
 		// normal scale
-		data.scaleX *= getPercent('scaleX');
-		data.scaleY *= getPercent('scaleY');
+		data.scaleX *= getPercent('scaleX', params.field);
+		data.scaleY *= getPercent('scaleY', params.field);
 
 		// tiny
-		data.scaleX *= Math.pow(0.5, getPercent('tinyX')) * Math.pow(0.5, getPercent('tiny'));
-		data.scaleY *= Math.pow(0.5, getPercent('tinyY')) * Math.pow(0.5, getPercent('tiny'));
+		data.scaleX *= Math.pow(0.5, getPercent('tinyX', params.field)) * Math.pow(0.5, getPercent('tiny', params.field));
+		data.scaleY *= Math.pow(0.5, getPercent('tinyY', params.field)) * Math.pow(0.5, getPercent('tiny', params.field));
 
-		data.scaleX *= getPercent('scale');
-		data.scaleY *= getPercent('scale');
+		data.scaleX *= getPercent('scale', params.field);
+		data.scaleY *= getPercent('scale', params.field);
 
 		return data;
 	}
 
-	override public function shouldRun():Bool
+	override public function shouldRun(params:RenderParams):Bool
 		return true;
 }

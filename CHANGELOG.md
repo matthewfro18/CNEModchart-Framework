@@ -27,3 +27,8 @@
 - Modchart Examples
 - More stuff im forgeting
 - False paradise stuff... modchart still wip !! some modifiers are not working, dont play it yet
+
+# 24/10/24
+- Improved Infinite Modifier
+- Optimization and code improvement
+- Bounce Mod

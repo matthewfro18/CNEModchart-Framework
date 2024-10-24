@@ -39,6 +39,9 @@ class EaseEvent extends Event
     }
     override function update(curBeat:Float)
     {
+		if (fired)
+			return;
+		
 		if (data.startValue == null) {
 			data.startValue = getModPercent(this.mod, this.field);
 
@@ -49,9 +52,6 @@ class EaseEvent extends Event
 		}
 		if (data.ease == null)
 			data.ease = FlxEase.linear;
-
-		if (fired)
-			return;
 
 		if (curBeat < data.endBeat)
 		{

@@ -10,10 +10,10 @@ class OpponentSwap extends Modifier
     override public function render(curPos:Vector3D, params:RenderParams)
     {
 		var distX = WIDTH / getPlayercount();
-		curPos.x -= distX * ModchartUtil.sign((params.field + 1) * 2 - 3) * getPercent('opponentSwap');
+		curPos.x -= distX * ModchartUtil.sign((params.field + 1) * 2 - 3) * getPercent('opponentSwap', params.field);
         return curPos;
     }
-	override public function shouldRun():Bool
-		return getPercent('opponentSwap') != 0;
+	override public function shouldRun(params:RenderParams):Bool
+		return getPercent('opponentSwap', params.field) != 0;
 
 }

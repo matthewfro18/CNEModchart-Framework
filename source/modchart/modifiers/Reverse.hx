@@ -18,18 +18,18 @@ class Reverse extends Modifier
         var kNum = getKeycount();
         var val:Float = 0;
         if(dir>=Math.floor(kNum * 0.5))
-            val += getPercent("split");
+            val += getPercent("split", player);
 
         if((dir%2)==1)
-            val += getPercent("alternate");
+            val += getPercent("alternate", player);
 
         var first = kNum * 0.25;
         var last = kNum-1-first;
 
         if(dir>=first && dir<=last)
-            val += getPercent("cross");
+            val += getPercent("cross", player);
 
-        val += getPercent('reverse') + getPercent("reverse" + Std.string(dir));
+        val += getPercent('reverse', player) + getPercent("reverse" + Std.string(dir), player);
 
         if(getPercent("unboundedReverse")==0){
             val %=2;
@@ -46,7 +46,7 @@ class Reverse extends Modifier
 		var reversePerc = getReverseValue(params.receptor, params.field);
 		var shift = FlxMath.lerp(initialY, HEIGHT - initialY, reversePerc);
 		
-		var centerPercent = getPercent('centered');		
+		var centerPercent = getPercent('centered', params.field);		
 		shift = FlxMath.lerp(shift, (HEIGHT * 0.5) - ARROW_SIZEDIV2, centerPercent);
 
 		var distance = params.hDiff * 0.45 * ModchartUtil.getScrollSpeed();
@@ -84,6 +84,6 @@ class Reverse extends Modifier
 
 		return scroll;
 	}
-	override public function shouldRun():Bool
+	override public function shouldRun(params:RenderParams):Bool
 		return true;
 }

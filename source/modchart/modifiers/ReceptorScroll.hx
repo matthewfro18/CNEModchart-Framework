@@ -28,12 +28,12 @@ class ReceptorScroll extends Modifier
 	
 		var endY = upscrollOffset + ((downscrollOffset - ARROW_SIZEDIV2) * revPerc) + ARROW_SIZEDIV2;
 	
-		curPos.y = FlxMath.lerp(startY, endY, getPercent('receptorScroll'));
+		curPos.y = FlxMath.lerp(startY, endY, getPercent('receptorScroll', params.field));
 		return curPos;
     }
 	override public function visuals(data:Visuals, params:RenderParams):Visuals
 	{
-		if (getPercent('receptorScroll') <= 0)
+		if (getPercent('receptorScroll', params.field) <= 0)
 			return data;
 		var bar = params.sPos / Conductor.stepCrochet;
 		var time = params.hDiff;
@@ -45,6 +45,6 @@ class ReceptorScroll extends Modifier
 		return data;
 	}
 
-	override public function shouldRun():Bool
-		return getPercent('receptorScroll') != 0;
+	override public function shouldRun(params:RenderParams):Bool
+		return getPercent('receptorScroll', params.field) != 0;
 }
