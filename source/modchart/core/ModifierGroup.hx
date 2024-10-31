@@ -1,19 +1,23 @@
 package modchart.core;
 
 import openfl.geom.Vector3D;
-import funkin.backend.system.Logs;
 import modchart.Modifier;
 import modchart.core.util.Constants.Visuals;
 import modchart.core.util.Constants.RenderParams;
 import modchart.core.util.Constants.NoteData;
 import modchart.modifiers.*;
 import modchart.modifiers.false_paradise.*;
-import funkin.backend.system.Conductor;
 import modchart.core.util.ModchartUtil;
 
 import haxe.ds.StringMap;
 import haxe.ds.IntMap;
+import haxe.ds.Vector;
 
+import funkin.backend.system.Conductor;
+import funkin.backend.system.Logs;
+
+// @:build(modchart.core.macros.Macro.buildModifiers())
+@:allow(modchart.Modifier)
 class ModifierGroup
 {
 	public static var GLOBAL_MODIFIERS:Map<String, Class<Modifier>> = [
@@ -48,14 +52,15 @@ class ModifierGroup
         'spiral' => Spiral,
         'counterclockwise' => CounterClockWise,
         'vibrate' => Vibrate,
-        'bounce' => Bounce
+        'bounce' => Bounce,
+        'radionic' => Radionic
     ];
 	private var MODIFIER_REGISTRERY:Map<String, Class<Modifier>> = GLOBAL_MODIFIERS;
 
 	private var percents:StringMap<IntMap<Float>> = new StringMap();
     private var modifiers:StringMap<Modifier> = new StringMap();
 
-	private var sortedMods:List<String> = new List<String>();
+	private var sortedMods:Array<String> = [];
 
 	public function new() {}
 
@@ -81,10 +86,9 @@ class ModifierGroup
 			glowB: 0.
 		};
 
-		final iterator = sortedMods.iterator();
-
-		do {
-			final mod = modifiers.get(iterator.next());
+		for (i in 0...sortedMods.length)
+		{
+			final mod = modifiers.get(sortedMods[i]);
 			mod.field = data.field;
 
 			final args:RenderParams = {
@@ -102,7 +106,7 @@ class ModifierGroup
 				continue;
 
 			visuals = mod.visuals(visuals, args);
-		} while (iterator.hasNext());
+		}
 
 		return visuals;
 	}
@@ -110,8 +114,9 @@ class ModifierGroup
     {
 		final iterator = sortedMods.iterator();
 
-		do {
-			final mod = modifiers.get(iterator.next());
+		for (i in 0...sortedMods.length)
+		{
+			final mod = modifiers.get(sortedMods[i]);
 			mod.field = data.field;
 
 			final args:RenderParams = {
@@ -130,7 +135,7 @@ class ModifierGroup
 				continue;
 
 			pos = mod.render(pos, args);
-		} while (iterator.hasNext());
+		}
 
         return pos;
     }
@@ -151,10 +156,9 @@ class ModifierGroup
 
 			return;
 		}
-
 		var newModifier = Type.createInstance(modifierClass, []);
 		modifiers.set(name.toLowerCase(), newModifier);
-		sortedMods.add(name.toLowerCase());
+		sortedMods.push(name.toLowerCase());
 	}
 
 	public function setPercent(name:String, value:Float, field:Int = -1)

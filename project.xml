@@ -177,15 +177,18 @@
 	<haxelib name="away3d" if="THREE_D_SUPPORT" />
 	<haxelib name="format" />
 	<haxelib name="flxanimate" />
-	<haxelib name="compiletime" />
 
 	<haxelib name="hscript-improved" />
 	<haxelib name="hxdiscord_rpc" if="DISCORD_RPC"/>
 	<haxelib name="markdown" />
+	<haxelib name="hxcpp-debug-server" if="debug"/>
 
 	<!-- _________________________________ Additional stuff _______________________________ -->
 
-	<haxeflag name="--macro" value="modchart.core.macros.Macro.includeClasses()" />
+	<section if="MODCHARTING_FEATURES">
+		<haxeflag name="--macro" value="addMetadata('@:build(modchart.core.macros.Macro.buildNoteClass())', 'funkin.game.Note')" />
+		<haxeflag name="--macro" value="include('modchart')" />
+	</section>
 
 	<section if="COMPILE_ALL_CLASSES">
 		<haxeflag name="-dce" value="no" />

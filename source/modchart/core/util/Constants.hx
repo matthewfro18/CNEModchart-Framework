@@ -1,6 +1,7 @@
 package modchart.core.util;
 
 import flixel.util.FlxColor;
+import flixel.graphics.tile.FlxDrawTrianglesItem;
 
 class Constants {}
 
@@ -39,4 +40,11 @@ class Visuals
 	public var glowR:Float;
 	public var glowG:Float;
 	public var glowB:Float;
+}
+
+@:structInit
+@:publicFields
+class ModchartStorage
+{
+	var drawItem:Null<FlxDrawTrianglesItem>;
 }

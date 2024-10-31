@@ -3,6 +3,7 @@ package modchart;
 import funkin.backend.system.Logs;
 import funkin.game.Note;
 import funkin.game.Strum;
+import funkin.game.StrumLine;
 import funkin.game.PlayState;
 import funkin.backend.utils.CoolUtil;
 import funkin.backend.system.Conductor;
@@ -16,9 +17,15 @@ import flixel.math.FlxPoint;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxEase.EaseFunction;
 import flixel.graphics.tile.FlxDrawTrianglesItem.DrawData;
+import flixel.graphics.tile.FlxDrawTrianglesItem;
 
+import openfl.geom.Matrix;
 import openfl.geom.Vector3D;
 import openfl.geom.ColorTransform;
+
+import openfl.display.Shape;
+import openfl.display.BitmapData;
+import openfl.display.GraphicsPathCommand;
 
 import modchart.modifiers.*;
 import modchart.events.*;
@@ -30,6 +37,7 @@ import modchart.core.util.Constants.NoteData;
 import modchart.core.util.Constants.Visuals;
 
 // @:build(modchart.core.macros.Macro.buildModifiers())
+@:allow(modchart.core.ModifierGroup)
 class Manager extends FlxBasic
 {
     public static var instance:Manager;
@@ -37,6 +45,9 @@ class Manager extends FlxBasic
 	public static var DEFAULT_HOLD_SUBDIVITIONS:Int = 1;
 
 	public var HOLD_SUBDIVITIONS(default, set):Int;
+
+	// turn on if u wanna arrow paths
+	public var renderArrowPaths:Bool = false;
 	
 	function set_HOLD_SUBDIVITIONS(divs:Int)
 	{
@@ -99,6 +110,10 @@ class Manager extends FlxBasic
 		addModifier('reverse');
 		addModifier('stealth');
 		addModifier('confusion');
+
+		setPercent('arrowPathAlpha', 1, -1);
+		setPercent('arrowPathThickness', 1, -1);
+		setPercent('arrowPathDivitions', 1, -1);
     }
 
 	public function registerModifier(name:String, mod:Class<Modifier>)   return modifiers.registerModifier(name, mod);
@@ -129,7 +144,7 @@ class Manager extends FlxBasic
         events.add(new EaseEvent(name, beat, length, value, easeFunc, field, events));
     }
 
-    override function update(elapsed)
+    override function update(elapsed:Float):Void
     {
         // Update Event Timeline
         events.update(Conductor.curBeatFloat);
@@ -157,7 +172,7 @@ class Manager extends FlxBasic
 		unit.normalize();
 		unit.setTo(unit.y, unit.x, 0);
 
-		var size = (new Vector3D(-HOLD_SIZEDIV2).subtract(new Vector3D(HOLD_SIZEDIV2)).length / 2) * visuals.scaleX * zScale * visuals.zoom;
+		var size = (new Vector3D(-HOLD_SIZEDIV2).subtract(new Vector3D(HOLD_SIZEDIV2)).length * .5) * visuals.scaleX * zScale * visuals.zoom;
 
 		return [
 			curPoint.add(new Vector3D(-unit.x * size, unit.y * size)),
@@ -165,8 +180,13 @@ class Manager extends FlxBasic
 			curPoint.add(new Vector3D(0, 0,  1 + (1 - zScale) * 0.001))
 		];
 	}
-	override function draw()
+	override function draw():Void
 	{
+		if (renderArrowPaths)
+			drawArrowPath(game.strumLines.members);
+
+		super.draw();
+
 		var drawCB = [];
         for (strumLine in game.strumLines)
 		{
@@ -180,6 +200,8 @@ class Manager extends FlxBasic
 					},
 					z: receptor.extra.get('z')
 				});
+
+				// draw the path for every receptor
 			});
 			strumLine.notes.forEach(arrow -> @:privateAccess {
 				if (!arrow.isSustainNote) {
@@ -363,19 +385,101 @@ class Manager extends FlxBasic
 
 		var cameras:Array<FlxCamera> = arrow._cameras ?? arrow.strumLine.cameras;
 		for (camera in cameras)
-			camera.drawTriangles(
-				arrow.graphic,
-				_vertices,
-				_indices,
-				_uvtData,
-				_colors,
-				null,
-				null,
-				false,
-				arrow.antialiasing,
-				colorTransf
-			);
+		{
+			var trianglesBatch:FlxDrawTrianglesItem;
+			
+			// create or recycle a new draw item
+			trianglesBatch = camera.startTrianglesBatch(arrow.graphic, false, true, null, true);
+
+			// add the actual draw data
+			trianglesBatch.addTriangles(_vertices, _indices, _uvtData, _colors, null, null, colorTransf);
+		}
 	}
+	/**
+	 * Draws the Arrow trajectory
+	 * 
+	 * This has very path performance
+	 * and i think it also has.....
+	 * M E M O R Y   L E A K S
+	 * 
+	 * Edit: so um it seems like i fix the memory leaks
+	 * but the mem count goes crazy anyways
+	 * @param fields The strum lines paths will be drawed
+	 */
+	function drawArrowPath(fields:Array<StrumLine>)
+	{
+		var shape = new Shape();
+		var data = new openfl.Vector<Float>();
+		var commands = new openfl.Vector<Int>();
+
+		var defaultPos = new Vector3D();
+		// so we draw every path of every receptor once
+		// cus if not, it crashs (cus stack overflow or something like that (i dont founded the error....))
+		for (f in fields) {
+			__pathSprite.cameras = f._cameras.copy();
+			
+			for (r in f) {
+				final l = r.extra.get('lane');
+				final fn = r.extra.get('field');
+
+				final alpha = getPercent('arrowPathAlpha', fn);
+				final thickness = Math.round(Math.max(1, getPercent('arrowPathThickness', fn)));
+
+				if (alpha <= 0 || thickness <= 0)
+					continue;
+				
+				final divitions = Math.round(35 / Math.max(1, getPercent('arrowPathDivitions', fn)));
+				final limit = 1500 * (1 + getPercent('arrowPathScale', fn));
+				final invertal = limit / divitions;
+
+				var moved = false;
+
+				defaultPos.setTo(getReceptorX(l, fn), getReceptorY(l, fn), 0);
+				defaultPos.incrementBy(ModchartUtil.getHalfPos());
+
+				shape.graphics.lineStyle(thickness, 0xFFFFFFFF, alpha);
+
+				for (sub in 0...divitions)
+				{
+					var time = Conductor.songPosition + invertal * sub;
+		
+					var position = modifiers.getPath(defaultPos.clone(), {
+						time: time,
+						hDiff: time - Conductor.songPosition,
+						receptor: l,
+						field: fn,
+						arrow: true
+					});
+		
+					if (moved)
+						commands.push(GraphicsPathCommand.LINE_TO);
+					else
+						commands.push(GraphicsPathCommand.MOVE_TO);
+					data.push(position.x);
+					data.push(position.y);
+		
+					moved = true;
+				}
+			}
+		}
+
+		shape.graphics.drawPath(commands, data);
+
+		// then drawing the path pixels into the sprite pixels
+		__pathSprite.pixels.fillRect(__pathSprite.pixels.rect, 0x00FFFFFF);
+		__pathSprite.pixels.draw(shape);
+		// draw the sprite to the cam
+		__pathSprite.draw();
+
+		data = null;
+		commands = null;
+		shape = null;
+	}
+	var __pathSprite:FlxSprite = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, 0x00FFFFFF);
+	// drawing the shape directly to paths sprite pixels
+	// keeping this commented cuz i have plans to use it
+	// var __pathBitmap:BitmapData = new BitmapData(FlxG.width, FlxG.height, true, 0x00FFFFFF);
+
 	function getNoteData(arrow:Note, posOff:Float = 0):NoteData
 	{
 		var pos = (arrow.strumTime - Conductor.songPosition) + posOff;
@@ -390,6 +494,15 @@ class Manager extends FlxBasic
 			field: arrow.strumLine.ID,
 			arrow: true
 		};
+	}
+
+	override function destroy():Void
+	{
+		super.destroy();
+
+		arrowPos = null;
+		receptorPos = null;
+		__pathSprite.destroy();
 	}
 
     private var receptorPos:Vector3D = new Vector3D();

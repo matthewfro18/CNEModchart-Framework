@@ -66,6 +66,9 @@ class Modifier
     public function getReceptorX(lane:Int, field:Int)
         @:privateAccess return PlayState?.instance?.strumLines.members[field]?.startingPos?.x + ((ARROW_SIZE) * lane);
 
+	public function getManager():Manager
+		return Manager.instance;
+
     private var WIDTH:Float = FlxG.width;
     private var HEIGHT:Float = FlxG.height;
     private var ARROW_SIZE(get, default):Float;

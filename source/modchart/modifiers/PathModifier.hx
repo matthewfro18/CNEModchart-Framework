@@ -13,7 +13,7 @@ typedef PathInfo = {
 	var end:Float;
 }
   
-// stolen from troll engine
+@ignoreMod
 class PathModifier extends Modifier
 {
 	var moveSpeed:Float;

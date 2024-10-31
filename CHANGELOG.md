@@ -32,3 +32,11 @@
 - Improved Infinite Modifier
 - Optimization and code improvement
 - Bounce Mod
+
+# 31/10/24
+- Changed List to Array in ModchartGroup (for better performance)
+- Added arrow paths (need to enable by Manager.renderArrowPaths = true)
+- Arrow path Sub mods
+  - Alpha
+  - Thickness
+  - Scale (Length / Limit)

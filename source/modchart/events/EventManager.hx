@@ -8,7 +8,7 @@ import haxe.ds.StringMap;
 class EventManager
 {
 	private var table:StringMap<Array<Array<Event>>> = new StringMap();
-
+	
     public function new() {};
 
     public function add(event:Event)
