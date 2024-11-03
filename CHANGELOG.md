@@ -40,3 +40,8 @@
   - Alpha
   - Thickness
   - Scale (Length / Limit)
+
+# 3/11/24
+- Fixed critical memory leak in the arrow path renderer (it went from 70MB to more than 4GB in a very short time).
+- Optimized a bit the arrow path renderer.
+- Added X mod

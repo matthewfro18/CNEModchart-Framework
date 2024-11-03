@@ -13,6 +13,12 @@ import funkin.game.PlayState;
 // Handles scroll speed, scroll angle and reverse modifiers
 class Reverse extends Modifier
 {
+	public function new()
+	{
+		super();
+
+		setPercent('xmod', 1, -1);
+	}
 	public function getReverseValue(dir:Int, player:Int)
 	{
         var kNum = getKeycount();
@@ -66,7 +72,7 @@ class Reverse extends Modifier
 		var angleZ = 0.;
 
 		// Speed
-		scroll.y = scroll.y * (1 + getPercent('scrollSpeed', params.field) + getPercent('scrollSpeed' + Std.string(params.receptor), params.field));
+		scroll.y = scroll.y * (getPercent('xmod')) + (1 + getPercent('scrollSpeed', params.field) + getPercent('scrollSpeed' + Std.string(params.receptor), params.field));
 
 		// Main
 		angleX += getPercent('scrollAngleX', params.field);

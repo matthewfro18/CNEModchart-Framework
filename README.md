@@ -20,20 +20,18 @@
 - [ ] Custom 3d view camera (using matrix)
 - [X] Fix sustain size and offsets when rotating & scaling
 - [X] Fix modifier indexing
-- [ ] Scripted modifiers
+- [X] Scripted modifiers
 - [X] Add patterns modifiers
 - [X] Hability of modify more values on modifiers (alpha, color, angles, distances (speed), etc)
    - [X] Alpha
    - [X] Angle
    - [X] Scale
-   - [ ] Color Transform
+   - [X] Color Transform
 - [ ] Multiple playfields support
-- [ ] Optimize and improve code (on progress)
-- [ ] Add note path (like not itg)
+- [X] Add note path (like not itg)
 - [ ] Standalone System (Using Macros & Plugin-based Classes)
-- [ ] Hold Graphic Subdivition System (theres already hold subdivs but are baad)
+- [X] Hold Graphic Subdivition System (theres already hold subdivs but are baad)
 
 ## KNOWED BUGS
-- Hold offsets broke when zooming (Mini)
-- Kinda laggy holds (for me, lol)
-- Hold subdivition system broken (there are actual subdivitions, so more subdivitions = more health gain)
+- Laggy Holds
+- Laggy Arrow Path

@@ -63,8 +63,8 @@ class ModchartUtil
 		final projectionOffset = 2 * near * (far * rangeDivition);
 		final projectionZ = projectionScale * worldZ + projectionOffset;
 
-		final projectedPos = new Vector3D(pos.x * halfFovTan, pos.y * halfFovTan, projectionZ * projectionZ);
-		projectedPos.scaleBy(1 / projectionZ);
+		final projectedPos = new Vector3D(pos.x * halfFovTan, pos.y * halfFovTan, projectionZ * projectionZ, projectionZ);
+		projectedPos.project();
 		projectedPos.incrementBy(halfScreenOffset);
 		return projectedPos;
 	}

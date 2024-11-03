@@ -15,9 +15,12 @@ import flixel.FlxCamera;
 import flixel.math.FlxMath;
 import flixel.math.FlxPoint;
 import flixel.tweens.FlxEase;
+import flixel.system.FlxAssets.FlxShader;
 import flixel.tweens.FlxEase.EaseFunction;
 import flixel.graphics.tile.FlxDrawTrianglesItem.DrawData;
 import flixel.graphics.tile.FlxDrawTrianglesItem;
+
+import openfl.Vector;
 
 import openfl.geom.Matrix;
 import openfl.geom.Vector3D;
@@ -227,6 +230,10 @@ class Manager extends FlxBasic
 		
 		for (item in drawCB) item.callback();
 	}
+	/**
+	 * TODO: Implement a custom renderer
+	 * to rotate the arrow graphic.
+	 */
 	function drawReceptor(receptor:Strum) @:privateAccess {
         final lane = receptor.extra.get('lane') ?? 0;
         final field = receptor.extra.get('field') ?? 0;
@@ -327,6 +334,11 @@ class Manager extends FlxBasic
 
 		lastScale.put();
 	}
+
+	/**
+	 * TODO: Draw every hold once in the camera buffer (via the camara graphics).
+	 * (instead of draw every single hold via flixel).
+	 */
 	function drawHoldArrow(arrow:Note) @:privateAccess {
 		var basePos = new Vector3D(
 			getReceptorX(arrow.strumID, arrow.strumLine.ID),
@@ -395,6 +407,7 @@ class Manager extends FlxBasic
 			trianglesBatch.addTriangles(_vertices, _indices, _uvtData, _colors, null, null, colorTransf);
 		}
 	}
+	// TODO: Optimize this
 	/**
 	 * Draws the Arrow trajectory
 	 * 
@@ -408,11 +421,15 @@ class Manager extends FlxBasic
 	 */
 	function drawArrowPath(fields:Array<StrumLine>)
 	{
-		var shape = new Shape();
 		var data = new openfl.Vector<Float>();
 		var commands = new openfl.Vector<Int>();
 
 		var defaultPos = new Vector3D();
+
+		__pathPoints.splice(0, __pathPoints.length);
+		__pathCommands.splice(0, __pathCommands.length);
+		__pathShape.graphics.clear();
+
 		// so we draw every path of every receptor once
 		// cus if not, it crashs (cus stack overflow or something like that (i dont founded the error....))
 		for (f in fields) {
@@ -425,11 +442,11 @@ class Manager extends FlxBasic
 				final alpha = getPercent('arrowPathAlpha', fn);
 				final thickness = Math.round(Math.max(1, getPercent('arrowPathThickness', fn)));
 
-				if (alpha <= 0 || thickness <= 0)
+				if ((alpha + thickness) <= 0)
 					continue;
 				
 				final divitions = Math.round(35 / Math.max(1, getPercent('arrowPathDivitions', fn)));
-				final limit = 1500 * (1 + getPercent('arrowPathScale', fn));
+				final limit = 1500 * (1 + getPercent('arrowPathLength', fn));
 				final invertal = limit / divitions;
 
 				var moved = false;
@@ -437,47 +454,49 @@ class Manager extends FlxBasic
 				defaultPos.setTo(getReceptorX(l, fn), getReceptorY(l, fn), 0);
 				defaultPos.incrementBy(ModchartUtil.getHalfPos());
 
-				shape.graphics.lineStyle(thickness, 0xFFFFFFFF, alpha);
+				__pathShape.graphics.lineStyle(thickness, 0xFFFFFFFF, alpha);
 
 				for (sub in 0...divitions)
 				{
-					var time = Conductor.songPosition + invertal * sub;
+					var time = invertal * sub;
 		
 					var position = modifiers.getPath(defaultPos.clone(), {
-						time: time,
-						hDiff: time - Conductor.songPosition,
+						time: Conductor.songPosition + time,
+						hDiff: time,
 						receptor: l,
 						field: fn,
 						arrow: true
 					});
+
+					/**
+					 * So it seems that if the lines are too far from the screen
+					   causes HORRIBLE memory leaks (from 60mb to 3gb-5gb in 2 seconds WHAT THE FUCK)
+					 */
+					if ((position.x <= -25) || (position.x >= __pathSprite.pixels.rect.width + 25) ||
+						(position.y <= -25) || (position.y >= __pathSprite.pixels.rect.height + 25))
+						continue;
 		
-					if (moved)
-						commands.push(GraphicsPathCommand.LINE_TO);
-					else
-						commands.push(GraphicsPathCommand.MOVE_TO);
-					data.push(position.x);
-					data.push(position.y);
+					__pathCommands.push(moved ? GraphicsPathCommand.LINE_TO : GraphicsPathCommand.MOVE_TO);
+					__pathPoints.push(position.x);
+					__pathPoints.push(position.y);
 		
 					moved = true;
 				}
 			}
 		}
 
-		shape.graphics.drawPath(commands, data);
+		__pathShape.graphics.drawPath(__pathCommands, __pathPoints);
 
 		// then drawing the path pixels into the sprite pixels
 		__pathSprite.pixels.fillRect(__pathSprite.pixels.rect, 0x00FFFFFF);
-		__pathSprite.pixels.draw(shape);
+		__pathSprite.pixels.draw(__pathShape);
 		// draw the sprite to the cam
 		__pathSprite.draw();
-
-		data = null;
-		commands = null;
-		shape = null;
 	}
 	var __pathSprite:FlxSprite = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, 0x00FFFFFF);
-	// drawing the shape directly to paths sprite pixels
-	// keeping this commented cuz i have plans to use it
+	var __pathShape:Shape = new Shape();
+	var __pathPoints:Vector<Float> = new Vector<Float>();
+	var __pathCommands:Vector<Int> = new Vector<Int>();
 	// var __pathBitmap:BitmapData = new BitmapData(FlxG.width, FlxG.height, true, 0x00FFFFFF);
 
 	function getNoteData(arrow:Note, posOff:Float = 0):NoteData
@@ -502,7 +521,11 @@ class Manager extends FlxBasic
 
 		arrowPos = null;
 		receptorPos = null;
+
 		__pathSprite.destroy();
+		__pathPoints.splice(0, __pathPoints.length);
+		__pathCommands.splice(0, __pathCommands.length);
+		__pathShape.graphics.clear();
 	}
 
     private var receptorPos:Vector3D = new Vector3D();
