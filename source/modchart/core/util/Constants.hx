@@ -41,10 +41,3 @@ class Visuals
 	public var glowG:Float;
 	public var glowB:Float;
 }
-
-@:structInit
-@:publicFields
-class ModchartStorage
-{
-	var drawItem:Null<FlxDrawTrianglesItem>;
-}

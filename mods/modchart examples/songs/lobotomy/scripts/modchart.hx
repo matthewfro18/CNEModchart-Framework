@@ -4,8 +4,13 @@ import modchart.core.ScriptedModifier;
 import modchart.modifiers.SawTooth;
 import modchart.core.ModifierGroup;
 import openfl.geom.Vector3D;
-import openfl.Vector;
+import openfl.Vector as OpenFlVector;
 import funkin.game.Note;
+
+import openfl.display.BitmapData;
+import openfl.display.Shape;
+import openfl.display.GraphicsPathCommand;
+import modchart.core.util.Constants.NoteData;
 
 var modchart:Manager;
 var pattern = [0, 1, 1.5];
@@ -15,35 +20,151 @@ var m = 1;
 function postCreate()
 {
 	modchart = new Manager(PlayState.instance);
-	modchart.HOLD_SUBDIVITIONS = 5;
+	modchart.HOLD_SUBDIVITIONS = 4;
+	modchart.renderArrowPaths = true;
 	add(modchart);
 
+	modchart.addModifier('arrowPath');
+	modchart.addModifier('centerRotate');
+	modchart.addModifier('scale');
+	modchart.ease('arrowPath', 0, 8, 1);
+
+	modchart.setPercent('arrowPathThickness', 3);
+	modchart.setPercent('arrowPathLength', 0.75);
+
+	var angle = 0;
+	for (i in 0...64)
+	{
+		modchart.set('arrowPathThickness', i, 32);
+		modchart.set('scale', i, 1.5);
+		modchart.set('flash', i, 1);
+
+		modchart.ease('arrowPathThickness', i, 1, 3, FlxEase.cubeOut);
+		modchart.ease('scale', i, 1, 1, FlxEase.cubeOut);
+		modchart.ease('flash', i, 2, 0, FlxEase.cubeOut);
+
+		// modchart.ease('centerRotateZ', i * 2, 2, (angle = (angle + 90)), FlxEase.cubeOut);
+	}
+
+	player.cpu = true;
+}
+var off = 0;
+function update(e)
+{
+	off += 90 * e;
+	modchart.setPercent('centerRotateX', Math.sin(curBeatFloat * 0.5 * Math.PI) * 35);
+	modchart.setPercent('centerRotateY', Math.cos(curBeatFloat * 0.5 * Math.PI) * 35);
+	modchart.setPercent('centerRotatez', off);
+}
+function fpmodcc()
+{
 	player.cpu = true;
 
-	scriptedModTest2();
-}
-function scriptedModTest2()
-{
-	var crochetRatio = 1 / Conductor.crochet;
-	var rotateSine = new ScriptedModifier();
-	rotateSine._render = (pos, params) -> {
-		if (params.receptor == 0 || params.receptor == 3)
-			return pos;
+	var points = [];
+	for (line in CoolUtil.coolTextFile('assets/modchart/arrowShape.csv'))
+	{
+		var coords = line.split(';');
+		points.push([Std.parseFloat(coords[0]) * 200, Std.parseFloat(coords[1]) * 200]);
+	}
+	trace(points);
 
-		var ang = (((params.hDiff) * crochetRatio)) * 250;
+	for (node in points)
+	{
+		node[0] += FlxG.width / 2;
+		node[1] += FlxG.height / 2 + 300;
+	}
+	var newMod = new ScriptedModifier();
+	newMod._render = (pos, params) -> {
+		var trgt = 1500;
+		var t:Float = Math.abs(Math.min(trgt, params.hDiff)) / trgt; // Progreso en el camino (0 a 1)
 
-		var origin = new Vector3D(50 + 112 / 2 + FlxG.width / 2 * params.field + 2 * 112, FlxG.height * 0.5);
-		var diff = pos.subtract(origin);
-		var out = ModchartUtil.rotate3DVector(diff, 0, ang, 0);
-		pos.copyFrom(origin.add(out));
+        var segmento:Float = (points.length - 1) * t; // Posición dentro de los segmentos
+        var index1:Int = Math.floor(segmento); // Nodo de inicio del segmento
+        var index2:Int = Math.min(index1 + 1, points.length - 1); // Nodo final del segmento
+
+        var nodo1 = points[index1];
+        var nodo2 = points[index2];
+
+        var interp:Float = segmento - index1;
+        var x:Float = FlxMath.lerp(nodo1[0], nodo2[0], interp);
+        var y:Float = FlxMath.lerp(nodo1[1], nodo2[1], interp);
+
+		pos.x = x;
+		pos.y = y;
+
 		return pos;
 	};
 
+	modchart.modifiers.modifiers.set('newMod', newMod);
+	modchart.modifiers.sortedMods.push('newMod');
+}
+function scriptedModTest3()
+{
+	player.cpu = true;
+
+	var crochetRatio = 1 / Conductor.crochet;
+	var rotateSine = new ScriptedModifier();
+	
+	var lastBeat = 0;
+	var formatHelper = 0;
+
+	final goldenRatio = (1 + Math.sqrt(5)) * .5;
+	final limitRatio = (1 / 1500);
+	rotateSine._render = (pos, params) -> {
+		final angle = (params.hDiff * limitRatio) * Math.PI;
+		final radius = Math.pow(goldenRatio, angle * 0.9) * 25;
+
+		pos.x = FlxG.width * 0.5 + Math.cos(angle) * radius;
+		pos.y = FlxG.height * 0.5 + Math.sin(angle) * radius;
+
+		return pos;
+	};
+
+	modchart.modifiers.modifiers.set('newInfinite', rotateSine);
+	modchart.modifiers.sortedMods.push('newInfinite');
+	modchart.addModifier('transform');
+
+	modchart.setPercent('z', -2500);
+}
+function scriptedModTest2()
+{
+	player.cpu = true;
+	var crochetRatio = 1 / Conductor.crochet;
+	var rotateSine = new ScriptedModifier();
+	rotateSine._render = (pos, params) -> {
+		if (!(params.receptor == 1 || params.receptor == 2)) return pos;
+		var ang = (((params.hDiff) * crochetRatio)) * 250 * 1.2;
+
+		var origin = new Vector3D(FlxG.width / 2, FlxG.height * 0.5);
+		var diff = pos.subtract(origin);
+		var out = ModchartUtil.rotate3DVector(diff, 0, ang, 0);
+		pos.copyFrom(origin.add(out));
+		pos.z *= 0.1;
+
+		return pos;
+	};
+	rotateSine._visuals = (vis, params) -> {
+		if (!(params.receptor == 1 || params.receptor == 2)) return vis;
+		var pos = new Vector3D(FlxG.width / 2 - 112 * 2 + 112 * params.receptor);
+		var ang = ((params.hDiff * crochetRatio)) * 250 * 1.2;
+
+		var origin = new Vector3D(FlxG.width / 2, FlxG.height * 0.5);
+		var diff = pos.subtract(origin);
+		var out = ModchartUtil.rotate3DVector(diff, 0, ang, 0);
+		pos.copyFrom(origin.add(out));
+		
+		vis.scaleX = vis.scaleY = (pos.z * 0.00275) + 1;
+
+		return vis;
+	};
+
+	modchart.addModifier('opponentSwap');
 	modchart.modifiers.modifiers.set('rotatesine', rotateSine);
 	modchart.modifiers.sortedMods.push('rotatesine');
-
 	modchart.addModifier('transform');
-	modchart.setPercent('z', -500);
+	modchart.addModifier('mini');
+	modchart.setPercent('opponentSwap', 0.5);
+	modchart.setPercent('alpha', 0.325, 0);
 }
 function scriptedModTest1()
 {
@@ -137,7 +258,7 @@ function testModchart()
 	modchart.ease('opponentSwap', 62, 1, 1, FlxEase.quartOut);
 	modchart.ease('opponentSwap', 64, 8, 0, FlxEase.cubeOut);
 
-	// modchart.ease('accelerate', 64 - 8, 8, 0.5, FlxEase.cubeOut);
+	modchart.ease('accelerate', 64 - 8, 8, 0.5, FlxEase.cubeOut);
 	modchart.ease('tornado', 64 - 8 + 8, 8 + 8, 0.25, FlxEase.cubeOut);
 }
 function onStrumCreation(ev)

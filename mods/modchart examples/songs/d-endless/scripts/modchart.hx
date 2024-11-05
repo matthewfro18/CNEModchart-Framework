@@ -9,10 +9,8 @@ var modchart;
 function postCreate()
 {
 	modchart = new Manager(PlayState.instance);
-	modchart.HOLD_SUBDIVITIONS = 4;
+	modchart.HOLD_SUBDIVITIONS = 3;
 	add(modchart);
-
-	player.cpu = true;
 
 	youneverstoleacat();
 }
@@ -357,7 +355,7 @@ function youneverstoleacat()
 	modchart.ease('alpha', 1184 / 4, 2, 0.5, FlxEase.cubeOut, 0);
 
 	modchart.ease('alpha', 1312 / 4, 2, 1, FlxEase.quadOut, 1);
-	modchart.ease('infinite', 1312 / 4, 2, 1, FlxEase.quadOut);
+	modchart.ease('infinite', 1312 / 4, 2, 1, FlxEase.quadOut, 1);
 	modchart.ease('alpha', 1312 / 4, 2, 0, FlxEase.quadOut, 0);
 
 	modchart.set('opponentSwap', 1316 / 4, 0);
@@ -368,7 +366,7 @@ function youneverstoleacat()
 	modchart.set('x3', 1316 / 4, 0, 0);
 	modchart.set('tiny', 1316 / 4, 0, 0);
 
-	modchart.ease('infinite', 1440 / 4, 2, 0, FlxEase.quadOut);
+	modchart.ease('infinite', 1440 / 4, 2, 0, FlxEase.quadOut, 1);
 	modchart.ease('alpha', 1440 / 4, 2, 1, FlxEase.quadOut);
 
 	kicks = [

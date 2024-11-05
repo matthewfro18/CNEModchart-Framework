@@ -13,6 +13,7 @@ class Macro
 	// this macro is actually runned but __modchartStorage is not used
 	// since it seems we cannot reuse a draw item
 	// TODO: figure out why cannot resue a draw item and fix it
+	/*
 	@:noUsing
 	public static function buildNoteClass():Array<Field>
 	{
@@ -50,6 +51,19 @@ class Macro
 					args: []
 				});
 			}
+		});
+
+		return fields;
+	}*/
+	public static function addZProperty():Array<Field>
+	{
+		var fields = Context.getBuildFields();
+
+		fields.push({
+			name: "_z",
+			access: [APublic],
+			kind: FieldType.FVar(macro:Float, macro $v{0}),
+			pos: Context.currentPos()
 		});
 
 		return fields;

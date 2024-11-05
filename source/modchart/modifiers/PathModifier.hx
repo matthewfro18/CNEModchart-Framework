@@ -5,110 +5,64 @@ import modchart.core.util.Constants.NoteData;
 import modchart.core.util.ModchartUtil;
 import openfl.geom.Vector3D;
 import flixel.math.FlxMath;
+import haxe.ds.Vector;
 
-typedef PathInfo = {
-	var position:Vector3D;
-	var dist:Float;
-	var start:Float;
-	var end:Float;
-}
-  
-@ignoreMod
+/**
+ * An Path Manager for FunkinModchart
+ * 
+ * TODO: Make the trajectory interpolation LINEAR
+ * @author TheoDev
+ */
 class PathModifier extends Modifier
 {
-	var moveSpeed:Float;
-	var pathData:Array<Array<PathInfo>> = [];
-	var totalDists:Array<Float> = [];
-	
-	public function getMoveSpeed() return 5000;
-	public function getPathName() return '';
-	
-	public function getPath():Array<Array<Vector3D>>
-		return [];
+	private var __path:Vector<PathNode>;
+	private var __pathBound:Float = 1500;
 
-	public function new()
+	public var pathOffset:Vector3D = new Vector3D();
+
+	// TODO
+	public var pathEase:Float->Float = (t) -> t;
+	// set this to false if wanna extra performance
+	public var pathLinear:Bool = false;
+	
+	public function new(path:Array<PathNode>)
 	{
 		super(0);
 
-		moveSpeed = getMoveSpeed();
-		var path:Array<Array<Vector3D>> = getPath();
-		var dir:Int = 0;
-	
-		while(dir < path.length)
-		{
-			var idx = 0;
-			totalDists[dir] = 0;
-			pathData[dir] = [];
-
-		  	while(idx < path[dir].length)
-			{
-				var pos = path[dir][idx];
-	
-				if(idx!=0)
-				{
-			  		var last = pathData[dir][idx-1];
-			  		totalDists[dir] += Math.abs(Vector3D.distance(last.position, pos));
-			 		var totalDist = totalDists[dir];
-			 		last.end = totalDist;
-			  		last.dist = last.start - totalDist;
-				}
-	
-				pathData[dir].push({
-					position: pos.add(new Vector3D(-ARROW_SIZEDIV2, -ARROW_SIZEDIV2)),
-					start: totalDists[dir],
-					end: 0,
-					dist: 0
-				});
-				idx++;
-		  	}
-		  	dir++;
-		}
+		loadPath(path);
 	}
 
-	override public function render(pos:Vector3D, params:RenderParams)
+	public function loadPath(newPath:Array<PathNode>)
 	{
-		var vDiff = -params.hDiff;
-		var data = params.receptor;
+		__path = Vector.fromArrayCopy(newPath);
+	}
 
-		var progress  = (vDiff / -moveSpeed) * totalDists[data];
-		var outPos = pos.clone();
-		var daPath = pathData[data];
+	public function computePath(pos:Vector3D, params:RenderParams, percent:Float)
+	{
+		if (__path.length <= 0)
+			return pos;
+		if (__path.length == 1)
+			return new Vector3D(__path[0].x, __path[0].y, __path[0].z);
 
-		// normally i dont use the field params cuz `Modifier` has a field property
-		// and its set on the modifiergroup
-		// but here does not work and im lazy for debugging
-		var modPerc = getPercent(getPathName(), params.field);
+        var nodeProgress = (__path.length - 1) * (Math.abs(Math.min(__pathBound, params.hDiff)) * (1 / __pathBound));
+        var thisNodeIndex = Math.floor(nodeProgress);
+        var nextNodeIndex = Math.floor(Math.min(thisNodeIndex + 1, __path.length - 1));
+        var nextNodeRatio = nodeProgress - thisNodeIndex;
 
-		var outPos = pos;
-
-		if (progress <= 0)
-		{
-			// for receptors
-			outPos = ModchartUtil.lerpVector3D(outPos, daPath[0].position.add(ModchartUtil.getHalfPos()), modPerc);
-		}
-		else
-		{
-			// for regular arrows (holds too)
-			var idx:Int = 0;
-	
-			while(idx<daPath.length)
-			{
-				var cData = daPath[idx];
-				var nData = daPath[idx+1];
-				  if(nData != null && cData != null){
-					if(progress > cData.start && progress < cData.end){
-						  var alpha = (cData.start - progress) / cData.dist;
-						  var interpPos:Vector3D = ModchartUtil.lerpVector3D(cData.position, nData.position, alpha);
-						  outPos = ModchartUtil.lerpVector3D(pos, interpPos.add(ModchartUtil.getHalfPos()), modPerc);
-					}
-				  }
-				  idx++;
-			}
-		}
-
-		return outPos;
+		return ModchartUtil.lerpVector3D(pos, new Vector3D(
+			FlxMath.lerp(__path[thisNodeIndex].x, __path[nextNodeIndex].x, nextNodeRatio),
+			FlxMath.lerp(__path[thisNodeIndex].y, __path[nextNodeIndex].y, nextNodeRatio),
+			FlxMath.lerp(__path[thisNodeIndex].z, __path[nextNodeIndex].z, nextNodeRatio)).add(pathOffset),
+		percent);
 	}
 
 	override public function shouldRun(params:RenderParams):Bool
-		return getPercent(getPathName()) != 0;
+		return true;
+}
+@:structInit
+class PathNode
+{
+	public var x:Float;
+	public var y:Float;
+	public var z:Float;
 }

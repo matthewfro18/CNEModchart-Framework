@@ -201,7 +201,7 @@ class Manager extends FlxBasic
 					callback: () -> {
 						drawReceptor(receptor);
 					},
-					z: receptor.extra.get('z')
+					z: receptor._z
 				});
 
 				// draw the path for every receptor
@@ -212,14 +212,14 @@ class Manager extends FlxBasic
 						callback: () -> {
 							drawTapArrow(arrow);
 						},
-						z: arrow.extra.get('z') - 2
+						z: arrow._z - 2
 					});
 				} else {
 					drawCB.push({
 						callback: () -> {
 							drawHoldArrow(arrow);
 						},
-						z: arrow.extra.get('z') - 1
+						z: arrow._z - 1
 					});
 				}
 			});
@@ -260,21 +260,23 @@ class Manager extends FlxBasic
 		receptor.scale.scale(1 / receptorPos.z);
         receptor.setPosition(receptorPos.x, receptorPos.y);
 
-		var colorTransf:ColorTransform = receptor.colorTransform ?? new ColorTransform();
-		colorTransf.redMultiplier = 1 - visuals.glow;
-		colorTransf.greenMultiplier = 1 - visuals.glow;
-		colorTransf.blueMultiplier = 1 - visuals.glow;
-		colorTransf.redOffset = visuals.glowR * visuals.glow * 255;
-		colorTransf.greenOffset = visuals.glowG * visuals.glow * 255;
-		colorTransf.blueOffset = visuals.glowB * visuals.glow * 255;
-		colorTransf.alphaMultiplier = visuals.alpha;
-		Reflect.setProperty(receptor, 'colorTransform', colorTransf);
+		if (receptor.colorTransform == null)
+			receptor.updateColorTransform();
 
+		receptor.setColorTransform(
+			1 - visuals.glow,
+			1 - visuals.glow,
+			1 - visuals.glow,
+			visuals.alpha,
+			Math.round(visuals.glowR * visuals.glow * 255),
+			Math.round(visuals.glowG * visuals.glow * 255),
+			Math.round(visuals.glowB * visuals.glow * 255)
+		);
 		receptor.scale.x *= visuals.scaleX * visuals.zoom;
 		receptor.scale.y *= visuals.scaleY * visuals.zoom;
 		receptor.angle = visuals.angle;
 
-		receptor.extra.set('z', Math.floor(receptorPos.z * 1000));
+		receptor._z = receptorPos.z * 1000;
 
 		var cameras:Array<FlxCamera> = receptor._cameras ?? game.strumLines.members[field].cameras;
 		for (camera in cameras)
@@ -309,22 +311,25 @@ class Manager extends FlxBasic
 		arrow.scale.scale(1 / arrowPos.z);
         arrow.setPosition(arrowPos.x, arrowPos.y);
 
-		var colorTransf:ColorTransform = arrow.colorTransform ?? new ColorTransform();
-		colorTransf.redMultiplier = 1 - visuals.glow;
-		colorTransf.greenMultiplier = 1 - visuals.glow;
-		colorTransf.blueMultiplier = 1 - visuals.glow;
-		colorTransf.redOffset = visuals.glowR * visuals.glow * 255;
-		colorTransf.greenOffset = visuals.glowG * visuals.glow * 255;
-		colorTransf.blueOffset = visuals.glowB * visuals.glow * 255;
-		colorTransf.alphaMultiplier = visuals.alpha;
-		Reflect.setProperty(arrow, 'colorTransform', colorTransf);
-		
+		if (arrow.colorTransform == null)
+			arrow.updateColorTransform();
+
+		arrow.setColorTransform(
+			1 - visuals.glow,
+			1 - visuals.glow,
+			1 - visuals.glow,
+			visuals.alpha,
+			Math.round(visuals.glowR * visuals.glow * 255),
+			Math.round(visuals.glowG * visuals.glow * 255),
+			Math.round(visuals.glowB * visuals.glow * 255)
+		);
+
 		arrow.scale.x *= visuals.scaleX * visuals.zoom;
 		arrow.scale.y *= visuals.scaleY * visuals.zoom;
 		arrow.alpha = visuals.alpha;
 		arrow.angle = visuals.angle;
 
-		arrow.extra.set('z', Math.floor(arrowPos.z * 1000));
+		arrow._z = arrowPos.z * 1000;
 
 		var cameras:Array<FlxCamera> = arrow._cameras ?? arrow.strumLine.cameras;
 		for (camera in cameras)
@@ -381,16 +386,20 @@ class Manager extends FlxBasic
 			}
 		}
 
-		var colorTransf:ColorTransform = new ColorTransform();
-		colorTransf.redMultiplier = 1 - arrowVisuals.glow;
-		colorTransf.greenMultiplier = 1 - arrowVisuals.glow;
-		colorTransf.blueMultiplier = 1 - arrowVisuals.glow;
-		colorTransf.redOffset = arrowVisuals.glowR * arrowVisuals.glow * 255;
-		colorTransf.greenOffset = arrowVisuals.glowG * arrowVisuals.glow * 255;
-		colorTransf.blueOffset = arrowVisuals.glowB * arrowVisuals.glow * 255;
-		colorTransf.alphaMultiplier = arrowVisuals.alpha * 0.6;
+		if (arrow.colorTransform == null)
+			arrow.updateColorTransform();
 
-		arrow.extra.set('z', arrowQuads[2].z * 1000);
+		arrow.setColorTransform(
+			1 - arrowVisuals.glow,
+			1 - arrowVisuals.glow,
+			1 - arrowVisuals.glow,
+			arrowVisuals.alpha * 0.6,
+			Math.round(arrowVisuals.glowR * arrowVisuals.glow * 255),
+			Math.round(arrowVisuals.glowG * arrowVisuals.glow * 255),
+			Math.round(arrowVisuals.glowB * arrowVisuals.glow * 255)
+		);
+
+		arrow._z = arrowQuads[2].z * 1000;
 
 		_vertices = new DrawData(vertTotal.length, false, vertTotal);
 		_uvtData = ModchartUtil.getHoldUVT(arrow, HOLD_SUBDIVITIONS);
@@ -404,7 +413,7 @@ class Manager extends FlxBasic
 			trianglesBatch = camera.startTrianglesBatch(arrow.graphic, false, true, null, true);
 
 			// add the actual draw data
-			trianglesBatch.addTriangles(_vertices, _indices, _uvtData, _colors, null, null, colorTransf);
+			trianglesBatch.addTriangles(_vertices, _indices, _uvtData, _colors, null, null, arrow.colorTransform);
 		}
 	}
 	// TODO: Optimize this
@@ -440,13 +449,13 @@ class Manager extends FlxBasic
 				final fn = r.extra.get('field');
 
 				final alpha = getPercent('arrowPathAlpha', fn);
-				final thickness = Math.round(Math.max(1, getPercent('arrowPathThickness', fn)));
+				final thickness = 1 + Math.round(getPercent('arrowPathThickness', fn));
 
 				if ((alpha + thickness) <= 0)
 					continue;
 				
 				final divitions = Math.round(35 / Math.max(1, getPercent('arrowPathDivitions', fn)));
-				final limit = 1500 * (1 + getPercent('arrowPathLength', fn));
+				final limit = 1250 * (1 + getPercent('arrowPathLength', fn));
 				final invertal = limit / divitions;
 
 				var moved = false;
@@ -472,8 +481,8 @@ class Manager extends FlxBasic
 					 * So it seems that if the lines are too far from the screen
 					   causes HORRIBLE memory leaks (from 60mb to 3gb-5gb in 2 seconds WHAT THE FUCK)
 					 */
-					if ((position.x <= -25) || (position.x >= __pathSprite.pixels.rect.width + 25) ||
-						(position.y <= -25) || (position.y >= __pathSprite.pixels.rect.height + 25))
+					if ((position.x <= 0 - thickness) || (position.x >= __pathSprite.pixels.rect.width) ||
+						(position.y <= 0 - thickness) || (position.y >= __pathSprite.pixels.rect.height))
 						continue;
 		
 					__pathCommands.push(moved ? GraphicsPathCommand.LINE_TO : GraphicsPathCommand.MOVE_TO);
@@ -538,7 +547,7 @@ class Manager extends FlxBasic
         return game.strumLines.members[field].startingPos.y;
     public function getReceptorX(lane:Float, field:Int)
         @:privateAccess
-        return game.strumLines.members[field].startingPos.x + ((ARROW_SIZE) * lane);
+        return game.strumLines.members[field].startingPos.x + ((SPACING) * lane);
 		
 	// for some reazon is 50 instead of 44 in cne
     public static var HOLD_SIZE:Float = 50 * 0.7;
@@ -546,4 +555,6 @@ class Manager extends FlxBasic
     public static var ARROW_SIZE:Float = 160 * 0.7;
     public static var ARROW_SIZEDIV2:Float = (160 * 0.7) * 0.5;
     public static var PI:Float = Math.PI;
+
+    public static var SPACING:Float = 160 * 0.7;
 }

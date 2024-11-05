@@ -7,31 +7,34 @@ var manager:Manager;
 
 function postCreate()
 {
-	player.cpu = true;
-
 	manager = new Manager(PlayState.instance);
 	manager.HOLD_SUBDIVITIONS = 4;
 	add(manager);
 
 	manager.addModifier('reverse');
-	manager.addModifier('receptorScroll');
-	manager.addModifier('transform');
 	manager.addModifier('invert');
 	manager.addModifier('beat');
 	manager.addModifier('schmovinDrunk');
 	manager.addModifier('schmovinTipsy');
-	manager.addModifier('wiggle');
+	manager.addModifier('rotate');
+	
+	manager.addModifier('counterClockWise');
 	manager.addModifier('arrowShape');
 	manager.addModifier('eyeShape');
-	manager.addModifier('counterclockwise');
-	manager.addModifier('vibrate');
-	manager.addModifier('confusion');
+	manager.addModifier('centerRotate');
 	manager.addModifier('spiral');
+	manager.addModifier('wiggle');
+	manager.addModifier('vibrate');
+	manager.addModifier('transform');
+	manager.addModifier('receptorScroll');
+
+	manager.addModifier('confusion');
 	manager.addModifier('stealth');
 	manager.addModifier('mini');
 	manager.addModifier('scale');
-	manager.addModifier('rotate');
-	manager.addModifier('centerRotate');
+
+	manager.__pathSprite.cameras = [camHUD];
+	manager.setPercent('arrowPathThickness', 2);
 
 	s([2, 1], 1, 'y', 0);
 	s([2, 1], -800, 'y', 0);
@@ -109,14 +112,14 @@ function postCreate()
 	{
 		var player = bar >= 26 ? 1 : 0;
 		e([bar, 1], 1, FlxEase.sineInOut, 0, 'schmovinDrunk', player);
-		e([bar, 1], 0.25, FlxEase.sineInOut, 0, 'confusion');
+		e([bar, 1], 0.25, FlxEase.sineInOut, 0, 'confusionOffset');
 		if (kickpattern5bars.contains(bar))
 		{
 			for (entry in kickpattern5)
 			{
 				var step = entry[0];
 				var length = entry[1] / 4.0;
-				e([bar, step], 0.25, FlxEase.sineInOut, this_alt(alt) * 0.2 * 45, 'confusion', player);
+				e([bar, step], 0.25, FlxEase.sineInOut, this_alt(alt) * 0.2 * 45, 'confusionOffset', player);
 				e([bar, step], length, FlxEase.circOut, this_alt(alt) * 40, 'xoffset', player);
 				s([bar, step], 0.5, 'tinyy', player);
 				s([bar, step], -0.5, 'tinyx', player);
@@ -132,7 +135,7 @@ function postCreate()
 			{
 				var step = entry[0];
 				var length = entry[1] / 4.0;
-				e([bar, step], 0.25, FlxEase.sineInOut, this_alt(alt) * 45, 'confusion', player);
+				e([bar, step], 0.25, FlxEase.sineInOut, this_alt(alt) * 45, 'confusionOffset', player);
 				e([bar, step], 0.25, FlxEase.sineInOut, this_alt(alt), 'schmovinDrunk', player);
 				e([bar, step], length, FlxEase.elasticOut, this_alt(alt) * 90, 'xoffset', player);
 				s([bar, step], 0.5, 'tinyy', player);
@@ -169,7 +172,7 @@ function postCreate()
 
 	e([34, 1], 0.5, FlxEase.sineInOut, 0, 'xoffset');
 	e([34, 1], 0.5, FlxEase.sineInOut, 0, 'x');
-	e([34, 1], 0.5, FlxEase.sineInOut, 0, 'confusion');
+	e([34, 1], 0.5, FlxEase.sineInOut, 0, 'confusionOffset');
 	e([34, 3], 1, FlxEase.sineInOut, -0.5, 'reverse');
 
 	s([34, 9], 0, 'reverse');
@@ -263,7 +266,7 @@ function postCreate()
 	{
 		for (i in 0...4)
 		{
-			e([bar, 1 + 4 * (i - 1)], 1, FlxEase.elasticOut, (Math.PI * 2 / 4 * (i + 1)) * 180 / Math.PI, 'confusion');
+			e([bar, 1 + 4 * (i - 1)], 1, FlxEase.elasticOut, (Math.PI * 2 / 4 * (i + 1)) * 180 / Math.PI, 'confusionOffset');
 		}
 	}
 
@@ -578,7 +581,7 @@ function AddToggleInvert(alt:Int, barstep:Array<Float>, player:Int)
 	{
 		e(barstep, 0.25, FlxEase.sineOut, (alt + 1) % 2, 'invert', player);
 	}
-	e(barstep, 0.25, FlxEase.sineOut, ((alt + 1) % 2 * Math.PI / 2) * 180 / Math.PI, 'confusion', player);
+	e(barstep, 0.25, FlxEase.sineOut, ((alt + 1) % 2 * Math.PI / 2) * 180 / Math.PI, 'confusionOffset', player);
 }
 
 // functions from schmovin client

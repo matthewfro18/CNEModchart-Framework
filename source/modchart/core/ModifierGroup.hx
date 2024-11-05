@@ -53,7 +53,8 @@ class ModifierGroup
         'counterclockwise' => CounterClockWise,
         'vibrate' => Vibrate,
         'bounce' => Bounce,
-        'radionic' => Radionic
+        'radionic' => Radionic,
+        'arrowpath' => ArrowPath
     ];
 	private var MODIFIER_REGISTRERY:Map<String, Class<Modifier>> = GLOBAL_MODIFIERS;
 

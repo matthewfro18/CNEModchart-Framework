@@ -10,50 +10,12 @@ function postCreate()
 	mngr = new Manager(PlayState.instance);
 	add(mngr);
 
-	mngr.HOLD_SUBDIVITIONS = 4;
-	mngr.addModifier('transform');
-	mngr.addModifier('stealth');
-	mngr.ease('sudden', 0, 8, 1);
-	mngr.ease('suddenOffset', 0, 8, 0.5);
+    mngr.__pathSprite.cameras = [camHUD];
+	mngr.setPercent('arrowPathThickness', 2);
 
-	// voidAndNull();
-}
-function testQuad(?aaa)
-{
-	var modifiers = mngr.modifiers;
-	var basePos = new Vector3D(100, 100);
+	mngr.HOLD_SUBDIVITIONS = 3;
 
-	var quad = [new Vector3D((-40)), new Vector3D((40))];
-	var params = {
-		hDiff: 100,
-		receptor: 0,
-		field: 0,
-		arrow: true
-	};
-
-	var curPoint = modifiers.getPath(basePos.clone(), params);
-	var scale:Float = curPoint.z != 0 ? (1 / curPoint.z) : 1;
-
-	params.hDiff += 1;
-	var nextPoint =  modifiers.getPath(basePos.clone(), params);
-	params.hDiff -= 1;
-
-	curPoint.z = nextPoint.z = 0;
-	
-	// normalized points difference (from 0-1)
-	var unit = nextPoint.subtract(curPoint);
-	unit.normalize();
-	// im dumb
-	unit.setTo(unit.y, unit.x, 0);
-
-	var size = (quad[0].subtract(quad[1]).length / 2) * scale;
-
-	var quadOffsets = [
-		new Vector3D(unit.x * size, -unit.y * size),
-		new Vector3D(-unit.x * size, unit.y * size)
-	];
-
-	trace((aaa != null ? (aaa + ': ') : '') + quadOffsets);
+	voidAndNull();
 }
 
 var kickPattern = [
@@ -203,8 +165,8 @@ function voidAndNull()
     modchart.queueSet(bs(256), 'drunk', 0.4);
     modchart.queueSet(bs(256), 'tipsy', 1.2);
 
-    modchart.queueSet(bs(256 + 8 - 2), 'drunk', 0);
-    modchart.queueSet(bs(256 + 8 - 2), 'tipsy', 0);
+    modchart.queueSet(bs(256 + 6.5), 'drunk', 0);
+    modchart.queueSet(bs(256 + 6.5), 'tipsy', 0);
     jumpPattern(256, 1, kickPatternCd);
     jumpPattern(272, 2, kickPattern);
     jumpPattern(304, 1, kickPatternFade);
@@ -226,7 +188,7 @@ function jumpPattern(start:Float, times:Int, pattern:Array<Float>)
             
             modchart.queueEase(time, time + decStep, 'tipsyZ', 0, 'circOut', -1, n * 1.8);
 			modchart.queueEase(time, time + decStep, 'centerRotateZ', 0, 'circOut', -1, n * angle);
-			modchart.queueEase(time, time + decStep, 'confusion', 0, 'circOut', -1, n * angle);
+			modchart.queueEase(time, time + decStep, 'confusionOffset', 0, 'circOut', -1, n * angle);
     
             n *= -1;
         }

@@ -7,6 +7,8 @@ import flixel.math.FlxMath;
 import modchart.core.util.ModchartUtil;
 import funkin.backend.utils.CoolUtil;
 
+import haxe.ds.Vector;
+
 private class TimeVector extends Vector3D
 {
 	public var startDist = 0.0;
@@ -16,67 +18,78 @@ private class TimeVector extends Vector3D
 
 class EyeShape extends Modifier
 {
-	var _path:List<TimeVector>;
+	var _path:Vector<TimeVector>;
 	var _pathDistance:Float = 0;
 
-	static inline var SCALE:Float = 600;
+	var SCALE:Float = 600;
 
-	function CalculatePathDistances(path:List<TimeVector>)
+	function getDistancesOf(path:Vector<TimeVector>)
 	{
-		var iterator = path.iterator();
-		var last = iterator.next();
-		last.startDist = 0;
-		var dist = 0.0;
-		while (iterator.hasNext())
+		var index:Int = 0;
+		var last = path[index]; last.startDist = 0;
+		var dist:Float = 0;
+
+		while (index < path.length)
 		{
-			var current = iterator.next();
-			var differential = current.subtract(last);
-			dist += differential.length;
-			current.startDist = dist;
+			final current = path[index];
+			final diff = current.subtract(last);
+
+			current.startDist = (dist += diff.length);
 			last.next = current;
 			last.endDist = current.startDist;
 			last = current;
+
+			index++;
 		}
 		return dist;
 	}
-	function GetPointAlongPath(distance:Float):Null<Vector3D>
+	function getPositionAt(distance:Float):Null<Vector3D>
 	{
-		for (vec in _path)
+		for (i in 0..._path.length)
 		{
+			final vec = _path[i];
+
 			if (FlxMath.inBounds(distance, vec.startDist, vec.endDist) && vec.next != null)
 			{
 				var ratio = (distance - vec.startDist) / vec.next.subtract(vec).length;
 				return ModchartUtil.lerpVector3D(vec, vec.next, ratio);
 			}
 		}
-		return _path.first();
+		return _path[0];
 	}
-	function LoadPath():List<TimeVector>
+	function loadPath():Vector<TimeVector>
 	{
-		var file = CoolUtil.coolTextFile('assets/modchart/eyeShape.csv');
-		var path = new List<TimeVector>();
-		for (line in file)
+		var pathArray:Array<TimeVector> = [];
+
+		for (node in CoolUtil.coolTextFile('assets/modchart/eyeShape.csv'))
 		{
-			var coords = line.split(';');
-			var vec = new TimeVector(Std.parseFloat(coords[0]), Std.parseFloat(coords[1]), Std.parseFloat(coords[2]), Std.parseFloat(coords[3]));
-			vec.scaleBy(SCALE);
-			path.add(vec);
+			final coords = node.split(';');
+			pathArray.push(new TimeVector(
+				Std.parseFloat(coords[0]) * SCALE,
+				Std.parseFloat(coords[1]) * SCALE,
+				Std.parseFloat(coords[2]) * SCALE,
+				Std.parseFloat(coords[3]) * SCALE
+			));
 		}
-		_pathDistance = CalculatePathDistances(path);
-		return path;
+
+		var pathIterable = Vector.fromArrayCopy(pathArray);
+		pathArray.resize(0);
+
+		_pathDistance = getDistancesOf(pathIterable);
+		return pathIterable;
 	}
 
     override public function render(curPos:Vector3D, params:RenderParams)
     {
 		if (_path == null)
-			_path = LoadPath();
+			_path = loadPath();
 
 		final perc = getPercent('eyeShape', params.field);
 
 		if (perc == 0)
 			return curPos;
 
-		var path = GetPointAlongPath(params.hDiff / 2000.0 * _pathDistance);
+		var path = getPositionAt(params.hDiff / 2000.0 * _pathDistance);
 
 		return ModchartUtil.lerpVector3D(curPos, path.add(
 			new Vector3D(WIDTH * .5 - 264 - 272, HEIGHT * .5 + 280 - 260)),
