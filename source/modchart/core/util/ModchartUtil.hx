@@ -118,7 +118,7 @@ class ModchartUtil
 	}
 	public inline static function getScrollSpeed():Float
 	{
-		return PlayState?.instance?.scrollSpeed ?? 1;
+		return PlayState.instance.scrollSpeed ?? 1;
 	}
     inline public static var HOLD_SIZE:Float = 44 * 0.7;
 	inline public static var ARROW_SIZE:Float = 160 * 0.7;
