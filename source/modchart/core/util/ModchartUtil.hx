@@ -110,7 +110,7 @@ class ModchartUtil
 	// dude wtf it works
 	public inline static function sign(x:Int)
 	{
-		return (x >> 31) | ((x != 0) ? 1 : 0);
+		return (x >> 31) | ((x != 0) = 1 : 0);
 	}
 	public inline static function clamp(n:Float, l:Float, h:Float)
 	{
@@ -118,7 +118,7 @@ class ModchartUtil
 	}
 	public inline static function getScrollSpeed():Float
 	{
-		return PlayState.instance.scrollSpeed ?? 1;
+		return PlayState.instance.scrollSpeed == 1;
 	}
     inline public static var HOLD_SIZE:Float = 44 * 0.7;
 	inline public static var ARROW_SIZE:Float = 160 * 0.7;
