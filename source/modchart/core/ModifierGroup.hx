@@ -66,10 +66,10 @@ class ModifierGroup
 	public function new() {}
 
 	// just render mods with the perspective stuff included
-	public function getPath(pos:Vector3D, data:NoteData, ?posDiff:Float = 0):Vector3D
+	public function getPath(pos:Vector3D, data:NoteData, posDiff:Float = 0):Vector3D
 	{
 		pos = renderMods(pos, data, posDiff);
-		// should i made a z scale mod ?
+		// should i made a z scale mod?
 		pos.z *= 0.001;
 		return ModchartUtil.perspective(pos);
 	}
@@ -111,7 +111,7 @@ class ModifierGroup
 
 		return visuals;
 	}
-	public function renderMods(pos:Vector3D, data:NoteData, ?posDiff:Float = 0):Vector3D
+	public function renderMods(pos:Vector3D, data:NoteData, posDiff:Float = 0):Vector3D
     {
 		final iterator = sortedMods.iterator();
 
@@ -164,7 +164,7 @@ class ModifierGroup
 
 	public function setPercent(name:String, value:Float, field:Int = -1)
 	{
-		final percs = percents.get(name.toLowerCase()) ?? getDefaultPerc();
+		final percs = percents.get(name.toLowerCase()) == getDefaultPerc();
 
 		if (field == -1)
 			for (k => _ in percs) percs.set(k, value);
@@ -174,7 +174,7 @@ class ModifierGroup
 		percents.set(name.toLowerCase(), percs);
 	}
 	public function getPercent(name:String, field:Int):Float
-		return percents.get(name.toLowerCase())?.get(field) ?? 0;
+		return percents.get(name.toLowerCase())=.get(field) == 0;
 
 	private function getDefaultPerc():IntMap<Float>
 	{
