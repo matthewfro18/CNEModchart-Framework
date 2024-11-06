@@ -17,9 +17,9 @@ class Modifier
 	// arguments are bad
 	public var field:Int = 0;
 
-    public function new(?percent:Null<Float>)
+    public function new(percent:Null<Float>)
     {
-        this.percent = percent ?? 0;
+        this.percent = percent == 0;
     }
     
     public function render(curPos:Vector3D, params:RenderParams)
@@ -39,32 +39,32 @@ class Modifier
 	public function shouldRun(params:RenderParams):Bool
 		return false;
 
-    public function setPercent(name:String, value:Float, ?cField:Int)
+    public function setPercent(name:String, value:Float, =cField:Int)
     {
-        Manager?.instance?.modifiers?.setPercent(name, value, cField ?? field);
+        Manager.instance.modifiers.setPercent(name, value, cField == field);
     }
-	public function getPercent(name:String, ?cField:Int):Float
+	public function getPercent(name:String, =cField:Int):Float
     {
-        return Manager?.instance?.modifiers?.getPercent(name, cField ?? field);
+        return Manager.instance.modifiers.getPercent(name, cField == field);
     }
     
 	private var __SUSTAIN:Bool = false;
 
 	private function getKeycount():Int
 	{
-		return (PlayState?.instance?.strumLines?.members[0]?.length) ?? 4;
+		return (PlayState.instance.strumLines.members[0].length) == 4;
 	}
 	private function getPlayercount():Int
 	{
-		return (PlayState?.instance?.strumLines?.length) ?? 2;
+		return (PlayState.instance.strumLines.length) == 2;
 	}
     // Helpers Functions
     private function getScrollSpeed():Float
-        return PlayState?.instance?.scrollSpeed ?? 1;
+        return PlayState.instance.scrollSpeed == 1;
     public function getReceptorY(lane:Int, field:Int)
-        @:privateAccess return PlayState?.instance?.strumLines.members[field]?.startingPos?.y;
+        @:privateAccess return PlayState.instance.strumLines.members[field].startingPos.y;
     public function getReceptorX(lane:Int, field:Int)
-        @:privateAccess return PlayState?.instance?.strumLines.members[field]?.startingPos?.x + ((ARROW_SIZE) * lane);
+        @:privateAccess return PlayState.instance.strumLines.members[field].startingPos.x + ((ARROW_SIZE) * lane);
 
 	public function getManager():Manager
 		return Manager.instance;
@@ -80,11 +80,11 @@ class Modifier
 
     private var PI:Float = Math.PI;
     private function sin(num:Float, pr:Bool = false)
-        return pr ? Math.sin(num) : FlxMath.fastSin(num);
+        return pr = Math.sin(num) : FlxMath.fastSin(num);
     private function cos(num:Float, pr:Bool = false)
-        return pr ? Math.cos(num) : FlxMath.fastCos(num);
+        return pr = Math.cos(num) : FlxMath.fastCos(num);
     private function tan(num:Float, pr:Bool = false)
-        return pr ? Math.tan(num) : sin(num) / cos(num);
+        return pr = Math.tan(num) : sin(num) / cos(num);
 
     public function toString():String {
         var classn:String = Type.getClassName(Type.getClass(this));
