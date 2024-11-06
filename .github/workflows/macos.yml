@@ -10,13 +10,13 @@ jobs:
     runs-on: macos-13
     steps:
       - name: Pulling the new commit
-        uses: actions/checkout@v6
+        uses: actions/checkout@v2
       - name: Setting up Haxe
-        uses: krdlab/setup-haxe@v6
+        uses: krdlab/setup-haxe@v1
         with:
           haxe-version: 4.2.5
       - name: Restore existing build cache for faster compilation
-        uses: actions/cache@v6
+        uses: actions/cache@v3
         with:
           # not caching the bin folder to prevent asset duplication and stuff like that
           key: cache-build-mac
@@ -28,19 +28,19 @@ jobs:
             cache-build-mac
       - name: Installing/Updating libraries
         run: |
-          haxe -cp commandline -D analyzer-optimize --run Main setup
+          haxe -cp commandline -D analyzer-optimize --run Main setup -s
       - name: Building the game
         run: |
           haxelib run lime build mac
       - name: Tar files
         run: tar -zcvf CodenameEngine.tar.gz -C export/release/macos/bin .
       - name: Uploading artifact (entire build)
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: Codename Engine
           path: CodenameEngine.tar.gz
       # - name: Uploading artifact (executable)
-      #   uses: actions/upload-artifact@v6
+      #   uses: actions/upload-artifact@v4
       #   with:
       #     name: Update-Mac
       #     path: export/release/macos/bin/CodenameEngine
@@ -64,7 +64,7 @@ jobs:
               }
             }
       - name: Uploading new cache
-        uses: actions/cache@v6
+        uses: actions/cache@v3
         with:
           # caching again since for some reason it doesnt work with the first post cache shit
           key: cache-build-mac
