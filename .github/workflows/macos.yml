@@ -10,13 +10,13 @@ jobs:
     runs-on: macos-13
     steps:
       - name: Pulling the new commit
-        uses: actions/checkout@v2
+        uses: actions/checkout@main
       - name: Setting up Haxe
-        uses: krdlab/setup-haxe@v1
+        uses: krdlab/setup-haxe@main
         with:
           haxe-version: 4.2.5
       - name: Restore existing build cache for faster compilation
-        uses: actions/cache@v3
+        uses: actions/cache@main
         with:
           # not caching the bin folder to prevent asset duplication and stuff like that
           key: cache-build-mac
@@ -35,17 +35,17 @@ jobs:
       - name: Tar files
         run: tar -zcvf CodenameEngine.tar.gz -C export/release/macos/bin .
       - name: Uploading artifact (entire build)
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@main
         with:
           name: Codename Engine
           path: CodenameEngine.tar.gz
       # - name: Uploading artifact (executable)
-      #   uses: actions/upload-artifact@v2
+      #   uses: actions/upload-artifact@main
       #   with:
       #     name: Update-Mac
       #     path: export/release/macos/bin/CodenameEngine
       - name: Clearing already existing cache
-        uses: actions/github-script@v6
+        uses: actions/github-script@main
         with:
           script: |
             const caches = await github.rest.actions.getActionsCacheList({
@@ -64,7 +64,7 @@ jobs:
               }
             }
       - name: Uploading new cache
-        uses: actions/cache@v3
+        uses: actions/cache@main
         with:
           # caching again since for some reason it doesnt work with the first post cache shit
           key: cache-build-mac
