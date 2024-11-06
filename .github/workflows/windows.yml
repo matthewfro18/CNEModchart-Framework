@@ -16,7 +16,7 @@ jobs:
         with:
           haxe-version: 4.2.5
       - name: Restore existing build cache for faster compilation
-        uses: actions/cache@v3
+        uses: actions/cache@main
         with:
           # not caching the bin folder to prevent asset duplication and stuff like that
           key: cache-build-windows
@@ -43,7 +43,7 @@ jobs:
       #     name: Update-Windows
       #     path: export/release/windows/bin/CodenameEngine.exe
       - name: Clearing already existing cache
-        uses: actions/github-script@v6
+        uses: actions/github-script@main
         with:
           script: |
             const caches = await github.rest.actions.getActionsCacheList({
