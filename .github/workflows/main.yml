@@ -1,5 +1,5 @@
 
-name: Mac OS Build
+name: Build
 on:
   push:
   workflow_dispatch:
